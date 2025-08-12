@@ -2,7 +2,7 @@ import type {  StoryObj } from '@storybook/vue3';
 import application from './index.vue';
 
 const meta = {
-    title: 'collectors/invoice-payment',
+    title: 'collectors/donation',
     //@ts-ignore
     component: application,
 

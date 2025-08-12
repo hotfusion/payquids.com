@@ -2,7 +2,7 @@ import {Interface} from "./index";
 import {Frame} from "@hotfusion/ui";
 import { defineComponent } from 'vue';
 export default defineComponent({
-    title : 'Interface',
+    title : 'Home',
     props : {
         component: {
             type: String
@@ -13,6 +13,6 @@ export default defineComponent({
     },
     data: () => ({} as any),
     async mounted() {
-        await new Frame('default-frame', new Interface({})).mount(undefined,this.$el.parentElement)
+         await new Frame('default-frame', new Interface({})).mount(undefined,this.$el.parentElement)
     }
 })
