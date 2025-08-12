@@ -25,7 +25,7 @@ export default defineComponent({
         this._interface = new Interface({
             theme : this.theme
         })
-        await new Frame('default-frame', this._interface).mount(undefined,this.$el.parentElement)
+        await new Frame('default-frame', this._interface).setWidth('100%').mount(undefined,this.$el.parentElement)
     },
     watch : {
         'theme'(){

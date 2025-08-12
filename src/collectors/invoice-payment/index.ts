@@ -5,7 +5,6 @@ interface IInterfaceSettings {
     theme: string;
 }
 export class Interface extends Component<any,any>{
-
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
             theme : 'default',
