@@ -5,6 +5,7 @@ interface IInterfaceSettings {
     theme: string;
 }
 export class Interface extends Component<any,any>{
+
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
             theme: 'default',
@@ -13,7 +14,7 @@ export class Interface extends Component<any,any>{
 
     async mount(frame: Frame): Promise<this> {
         let navigator = new Navigator({
-            hideTabs : true,
+            hideTabs   : true,
             components : []
         });
 
@@ -21,7 +22,12 @@ export class Interface extends Component<any,any>{
             = new Frame('form',navigator);
 
 
+        this.on('settings', this.render)
         await frame.push(form);
         return super.mount(frame);
+    }
+
+    render(){
+        console.log('theme',this.settings.theme);
     }
 }
