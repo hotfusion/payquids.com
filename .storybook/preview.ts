@@ -3,13 +3,7 @@ import { addons } from '@storybook/manager-api';
 import { withThemeByClassName } from '@storybook/addon-themes';
 const preview: Preview = {
   parameters: {
-      themes: {
-          default: 'light',
-          list: [
-              { name: 'default', class: 'default', color: '#f0f0f0' },
-              { name: 'dark', class: 'dark', color: '#333333' }
-          ],
-      },
+
       controls: {
           matchers: {
               color: /(background|color)$/i,
