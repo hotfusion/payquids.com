@@ -5,7 +5,9 @@ const meta = {
     title: 'collectors/invoice-payment',
     //@ts-ignore
     component: application,
-
+    args : {
+        theme : 'dark'
+    }
 }
 
 export default meta;
