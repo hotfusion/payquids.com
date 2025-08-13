@@ -19,14 +19,16 @@ export class ClientInformation extends Component<any,any>{
                 placeholder : '#Enter invoice number',
                 label : 'Invoice number',
                 notes : [{
-                    note : 'If you don’t have the invoice number, please provide the email address associated with your invoice.'
+                    note : 'If you don’t have the invoice number, please provide the email address associated with your invoice.',
+                    clickable : false
                 }]
             })),
             amount  : new Frame('amount-input', new Input({
                 theme : this.settings.theme,
                 placeholder : '$0.00',
                 notes : [{
-                    note : 'If you don’t have the invoice number, please provide the email address associated with your invoice.'
+                    note : 'Enter the amount which is on your invoice.',
+                    clickable : false
                 }]
             })),
             name  : new Frame('client-name-input', new Input({

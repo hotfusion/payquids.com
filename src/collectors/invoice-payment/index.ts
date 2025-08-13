@@ -17,7 +17,6 @@ export class Interface extends Component<any,any>{
         let selectedIndex = 0;
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
-           // hideTabs   : true,
             commands   : [{
                 id       : 'next',
                 type     : 'button',
@@ -28,6 +27,9 @@ export class Interface extends Component<any,any>{
             components : [{
                 id        : 'client-information-tab',
                 title     : 'Invoice',
+                icon : {
+                  code : 'add'
+                },
                 component : new ClientInformation(this.settings),
             },{
                 id        : 'payment-gateway-tab',
