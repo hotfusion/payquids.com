@@ -14,12 +14,17 @@ html,body {
       width: 400px !important;
       height: 560px !important;
       > [ouid="tabs"]{
-        margin-bottom: 10px;
+        background-color: var(--color-bg-light);
+        border-radius: 4px;
         > * {
           background-color: transparent !important;
-          width: 33% !important;
-          [ouid="view"] {
-            justify-content: center;
+          &:before{
+            background-color: transparent !important;
+          }
+          &[selected="true"]{
+            [ouid="label"]{
+              color: var(--color-accent);
+            }
           }
         }
       }

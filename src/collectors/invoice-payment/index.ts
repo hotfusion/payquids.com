@@ -17,6 +17,8 @@ export class Interface extends Component<any,any>{
         let selectedIndex = 0;
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
+            theme      : 'dark',
+            stretch    : true,
             commands   : [{
                 id       : 'next',
                 type     : 'button',
@@ -27,27 +29,40 @@ export class Interface extends Component<any,any>{
             components : [{
                 id        : 'client-information-tab',
                 title     : 'Invoice',
+                align     : 'center',
                 icon : {
-                  code : 'add'
+                  code : 'keyboard_double_arrow_right'
                 },
                 component : new ClientInformation(this.settings),
             },{
                 id        : 'payment-gateway-tab',
                 title     : 'Payment',
+                disabled  : true,
+                icon : {
+                    code : 'keyboard_double_arrow_right'
+                },
+                align     : 'center',
                 component : new PaymentGateway(this.settings),
 
             },{
                 id        : 'receipt-tab',
                 title     : 'Receipt',
+                disabled  : true,
+                icon : {
+                    code : 'keyboard_double_arrow_right'
+                },
+                align     : 'center',
                 component : new Receipt(this.settings),
             }]
         }).on('command:click', (e) => {
-            if(e.item.id === 'next' && selectedIndex < 3)
+            if(e.item.id === 'next' && selectedIndex < 2)
                 selectedIndex++;
 
             navigator.updateSettings({
                 selectedIndex
             });
+        }).on('index:changed', ({index}) => {
+            selectedIndex = index;
         });
 
         let form

@@ -22,7 +22,7 @@ export class ClientInformation extends Component<any,any>{
                     note : 'If you don’t have the invoice number, please provide the email address associated with your invoice.',
                     clickable : false
                 }]
-            })),
+            })).setStyle({marginTop: '10px'}),
             amount  : new Frame('amount-input', new Input({
                 theme : this.settings.theme,
                 placeholder : '$0.00',
