@@ -17,18 +17,31 @@ export class ClientInformation extends Component<any,any>{
             invoice  : new Frame('invoice-input', new Input({
                 theme : this.settings.theme,
                 placeholder : '#Enter invoice number',
+                label : 'Invoice number',
+                notes : [{
+                    note : 'If you don’t have the invoice number, please provide the email address associated with your invoice.'
+                }]
+            })),
+            amount  : new Frame('amount-input', new Input({
+                theme : this.settings.theme,
+                placeholder : '$0.00',
+                notes : [{
+                    note : 'If you don’t have the invoice number, please provide the email address associated with your invoice.'
+                }]
             })),
             name  : new Frame('client-name-input', new Input({
                 theme : this.settings.theme,
-                placeholder : 'Enter your first and last name'
+                placeholder : 'Andrew Patel',
+                label : 'Full Name',
             })),
             email : new Frame('client-email-input', new Input({
                 theme : this.settings.theme,
-                placeholder : 'Enter your email address'
+                placeholder : 'andrew.patel@email.com',
+                label : 'Email Address',
             })),
         }
 
-        await frame.setOrientation('horizontal').setStyle({gap:'10px',padding:'10px'}).push(this.form.invoice,this.form.name,this.form.email);
+        await frame.setOrientation('horizontal').push(this.form.invoice, this.form.amount,this.form.name,this.form.email);
         return super.mount(frame);
     }
 

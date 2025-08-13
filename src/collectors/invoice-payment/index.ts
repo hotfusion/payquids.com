@@ -27,12 +27,13 @@ export class Interface extends Component<any,any>{
             }],
             components : [{
                 id        : 'client-information-tab',
-                title     : 'Client Information',
+                title     : 'Invoice',
                 component : new ClientInformation(this.settings),
             },{
                 id        : 'payment-gateway-tab',
                 title     : 'Payment',
                 component : new PaymentGateway(this.settings),
+
             },{
                 id        : 'receipt-tab',
                 title     : 'Receipt',

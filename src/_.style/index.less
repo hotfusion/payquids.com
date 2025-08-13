@@ -1,4 +1,35 @@
 @import "node_modules/@hotfusion/ui/src/index";
 html,body {
+  [component="input"] {
+    [ouid="container"]{
+      min-height: 40px  !important;
+      max-height: 40px  !important;
+      height: 40px  !important;
+    }
+  }
+  [ouid="invoice-payment"]{
+    align-items: center;
+    justify-content: center;
+    > [ouid="form"] {
+      width: 400px !important;
+      height: 560px !important;
+      > [ouid="tabs"]{
+        margin-bottom: 10px;
+        > * {
+          background-color: transparent !important;
+          width: 33% !important;
+          [ouid="view"] {
+            justify-content: center;
+          }
+        }
+      }
 
+      > [ouid="views"] {
+        > * {
+          padding: 10px 0 ;
+          gap: 10px;
+        }
+      }
+    }
+  }
 }
