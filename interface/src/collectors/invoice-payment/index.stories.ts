@@ -1,5 +1,5 @@
 import type {  StoryObj } from '@storybook/vue3';
-import application from './index.vue';
+import application from './index.vue.js';
 
 const meta = {
     title: 'collectors/invoice-payment',

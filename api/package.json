@@ -1,0 +1,15 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build"   : "node ./node_modules/@hotfusion/ws/_.build.js                    --dir=$PWD",
+    "start"   : "npm run build && node ./node_modules/@hotfusion/ws/_.start.js   --dir=$PWD",
+    "deploy"  : "npm run build && node ./node_modules/@hotfusion/ws/_.deploy.js  --dir=$PWD --host=204.12.203.220 --username=administrator --password=!B1mujx22"
+  },
+  "dependencies": {
+    "@hotfusion/ws" : "../../workspace/dist"
+  },
+  "private": true
+}
