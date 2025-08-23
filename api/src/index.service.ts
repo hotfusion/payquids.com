@@ -1,9 +1,9 @@
-import {REST,Controller,Authorization, Mongo, Workspace} from "@hotfusion/ws";
-
+import {REST,Controller,Authorization, Mongo} from "@hotfusion/ws";
+import {Workspace} from "./workspace";
 import type {IBranch, IProcessor,ICollections} from "./index.schema";
 
 @Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors'])
-class Processors extends Workspace {
+class Processors extends Workspace{
     @REST.post()
     'processor/create'(@REST.schema() processor:IProcessor){
 

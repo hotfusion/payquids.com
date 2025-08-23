@@ -1,10 +1,12 @@
-import { B } from "./u.schema";
+export interface IUser {
+    email : string
+}
 export interface IBranch {
     name: string
 }
 
 export interface IProcessor {
-    is : B
+    name : string
 }
 
 export interface ICollections {
