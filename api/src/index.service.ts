@@ -1,8 +1,9 @@
-import {REST,Controller,Authorization, Mongo} from "@hotfusion/ws";
+import {REST,Controller,Authorization, Mongo, Workspace} from "@hotfusion/ws";
+
 import type {IBranch, IProcessor,ICollections} from "./index.schema";
 
 @Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors'])
-class Processors {
+class Processors extends Workspace {
     @REST.post()
     'processor/create'(@REST.schema() processor:IProcessor){
         Mongo.$.processor.insertOne({})
@@ -11,16 +12,17 @@ class Processors {
 
 export default class API extends Processors {
     @REST.get()
+    @Authorization.protect()
     'branch/create'(@REST.schema() branch:IBranch) {
         return {
-            message :`branch ${branch.name} created successfully`
+            message : `branch ${branch.name} created successfully`
         }
     }
     @Controller.on("mounted")
-    @Authorization.protect()
     async mounted(){
-        Mongo.$.processors.insertOne({
+
+        /*Mongo.$.processors.insertOne({
             name : 'vadim'
-        });
+        });*/
     }
 }
