@@ -1,8 +1,11 @@
+import { B } from "./u.schema";
 export interface IBranch {
     name: string
 }
 
-export interface IProcessor {}
+export interface IProcessor {
+    is : B
+}
 
 export interface ICollections {
     processors: {

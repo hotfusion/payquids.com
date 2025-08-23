@@ -6,7 +6,8 @@ import type {IBranch, IProcessor,ICollections} from "./index.schema";
 class Processors extends Workspace {
     @REST.post()
     'processor/create'(@REST.schema() processor:IProcessor){
-        Mongo.$.processor.insertOne({})
+
+       // Mongo.$.processors.insertOne({})
     }
 }
 
