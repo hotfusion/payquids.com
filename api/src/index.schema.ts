@@ -1,5 +1,6 @@
-export interface IUser {
+export interface IUserAccess {
     email : string
+    password: string
 }
 export interface IBranch {
     name: string
