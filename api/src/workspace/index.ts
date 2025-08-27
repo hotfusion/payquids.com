@@ -1,21 +1,26 @@
 import {Controller, Authorization, REST, ICTX} from "@hotfusion/ws";
-import {IUserAccess} from "../index.schema";
+import {IUserCredentials, IUserRegistration} from "../index.schema";
 
 @Authorization.provider('local')
 export  class Workspace {
-    @Authorization.protect({
-        roles : ['root','dev']
-    })
-    @REST.get()
-    '_.ws/root/create'(@REST.schema() settings : IUserAccess,ctx:ICTX){
-        ctx.getUser().log('hello there')
-        return {name:'vadim'}
+
+    @REST.post()
+    async '_.ws/user/create'(@REST.schema() settings : IUserRegistration,ctx:ICTX){
+        let user = await ctx.createUser('local', {
+            email    : settings.email,
+            password : settings.password,
+            confirm  : settings.confirm
+        })
+
+        return { token : await ctx.generateTokens('local',user.sub) }
     }
 
     @REST.get()
-    '_.ws/signin'(@REST.schema() settings : IUserAccess,ctx:ICTX){
-        console.log(settings,ctx)
-        return ctx.getUser().createToken('_id:12345678')
+    '_.ws/user/signin'(@REST.schema() settings : IUserCredentials,ctx:ICTX){
+
+        return ctx.createUser('local',{
+            email : settings.email,
+        })
     }
     @Controller.on('mounted')
     __mounted(){

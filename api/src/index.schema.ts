@@ -1,6 +1,12 @@
-export interface IUserAccess {
+export interface IUserRegistration {
     email : string
     password: string
+    confirm : string
+}
+export interface IUserCredentials {
+    email : string
+    password: string
+    confirm : string
 }
 export interface IBranch {
     name: string
