@@ -1,4 +1,5 @@
 export interface IUserRegistration {
+    name : string
     email : string
     password: string
     confirm : string
@@ -6,7 +7,6 @@ export interface IUserRegistration {
 export interface IUserCredentials {
     email : string
     password: string
-    confirm : string
 }
 export interface IBranch {
     name: string

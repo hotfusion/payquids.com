@@ -6,22 +6,30 @@ export  class Workspace {
 
     @REST.post()
     async '_.ws/user/create'(@REST.schema() settings : IUserRegistration,ctx:ICTX){
-        let user = await ctx.createUser('local', {
+        await ctx.createUser('local', {
+            name     : settings.name,
             email    : settings.email,
             password : settings.password,
             confirm  : settings.confirm
         })
 
-        return { token : await ctx.generateTokens('local',user.sub) }
+        let user
+            = await ctx.findUser('local', {email : settings.email});
+
+        let token
+            = await ctx.generateTokens('local',user.sub)
+
+        return { ...token,sub:user.sub,email:user.email,name:user.name }
     }
 
     @REST.get()
-    '_.ws/user/signin'(@REST.schema() settings : IUserCredentials,ctx:ICTX){
+    async '_.ws/user/signin'(@REST.schema() settings : IUserCredentials,ctx:ICTX){
+        let user  = await ctx.findUser('local', {email : settings.email});
+        let token = await ctx.authenticateUser('local',user.sub,settings.password);
 
-        return ctx.createUser('local',{
-            email : settings.email,
-        })
+        return { ...token,sub:user.sub,email:user.email,name:user.name };
     }
+
     @Controller.on('mounted')
     __mounted(){
 
