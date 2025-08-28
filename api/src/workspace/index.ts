@@ -19,19 +19,29 @@ export  class Workspace {
         let token
             = await ctx.generateTokens('local',user.sub)
 
-        return { ...token,sub:user.sub,email:user.email,name:user.name }
+        return {
+            access_token : token.access_token,
+            sub          : user.sub,
+            email        : user.email,
+            name         : user.name,
+            role         : user.role
+        }
     }
 
     @REST.get()
     async '_.ws/user/signin'(@REST.schema() settings : IUserCredentials,ctx:ICTX){
-        let user  = await ctx.findUser('local', {email : settings.email});
-        let token = await ctx.authenticateUser('local',user.sub,settings.password);
+        let user
+            = await ctx.findUser('local', {email : settings.email});
 
-        return { ...token,sub:user.sub,email:user.email,name:user.name };
-    }
+        let token
+            = await ctx.authenticateUser('local',user.sub,settings.password);
 
-    @Controller.on('mounted')
-    __mounted(){
-
+        return {
+            access_token : token.access_token,
+            sub          : user.sub,
+            email        : user.email,
+            name         : user.name,
+            role         : user.role
+        }
     }
 }
