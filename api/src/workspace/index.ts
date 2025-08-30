@@ -1,11 +1,11 @@
 import {Controller, Authorization, REST, ICTX} from "@hotfusion/ws";
 import {IUserCredentials, IUserRegistration} from "../index.schema";
 
+@Authorization.roles('root','user')
 @Authorization.provider('local')
 export  class Workspace {
-
     @REST.post()
-    async '_.ws/user/create'(@REST.schema() settings : IUserRegistration,ctx:ICTX){
+    async '_.ws/user/registrate'(@REST.schema() settings : IUserRegistration,ctx:ICTX){
         await ctx.createUser('local', {
             name     : settings.name,
             email    : settings.email,
@@ -21,15 +21,17 @@ export  class Workspace {
 
         return {
             access_token : token.access_token,
+            expire       : token.expires_in,
             sub          : user.sub,
             email        : user.email,
             name         : user.name,
-            role         : user.role
+            role         : user.role,
+            provider     : user.provider
         }
     }
 
     @REST.get()
-    async '_.ws/user/signin'(@REST.schema() settings : IUserCredentials,ctx:ICTX){
+    async '_.ws/user/authenticate'(@REST.schema() settings : IUserCredentials,ctx:ICTX){
         let user
             = await ctx.findUser('local', {email : settings.email});
 
@@ -38,10 +40,12 @@ export  class Workspace {
 
         return {
             access_token : token.access_token,
+            expire       : token.expires_in,
             sub          : user.sub,
             email        : user.email,
             name         : user.name,
-            role         : user.role
+            role         : user.role,
+            provider     : user.provider
         }
     }
 }
