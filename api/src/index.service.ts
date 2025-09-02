@@ -15,12 +15,10 @@ class Processors{
 
 export default class API extends Processors {
     @REST.get()
-    @Authorization.protect({
-        roles: ['admin'],
-    })
+    @Authorization.protect()
     'branch/create'(@REST.schema() branch:IBranch) {
         return {
-            message : `branch ${branch.name} created successfully`
+            message : `branch ${branch.domain} created successfully`
         }
     }
     @Controller.on("mounted")

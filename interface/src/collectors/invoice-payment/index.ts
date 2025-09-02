@@ -1,7 +1,7 @@
 import "../../_.style/index.less"
 import {Component, Frame, Input,Navigator,Observable} from "@hotfusion/ui";
 import {ClientInformation} from "./pages/client-information";
-import {PaymentGateway} from "./pages/payment-gateway";
+import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
 
 interface IInterfaceSettings {
@@ -33,7 +33,7 @@ export class Interface extends Component<any,any>{
                 icon : {
                   code : 'keyboard_double_arrow_right'
                 },
-                component : new ClientInformation(this.settings),
+                component : new ClientInformation(this.getSettings()),
             },{
                 id        : 'payment-gateway-tab',
                 title     : 'Payment',
@@ -42,7 +42,7 @@ export class Interface extends Component<any,any>{
                     code : 'keyboard_double_arrow_right'
                 },
                 align     : 'center',
-                component : new PaymentGateway(this.settings),
+                component : new ProcessorGateway(this.getSettings()),
 
             },{
                 id        : 'receipt-tab',
@@ -52,7 +52,7 @@ export class Interface extends Component<any,any>{
                     code : 'keyboard_double_arrow_right'
                 },
                 align     : 'center',
-                component : new Receipt(this.settings),
+                component : new Receipt(this.getSettings()),
             }]
         }).on('command:click', (e) => {
             if(e.item.id === 'next' && selectedIndex < 2)
@@ -75,6 +75,6 @@ export class Interface extends Component<any,any>{
     }
 
     render(){
-        console.log('theme',this.settings.theme);
+        console.log('theme',this.getSettings().theme);
     }
 }

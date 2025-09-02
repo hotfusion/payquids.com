@@ -13,6 +13,7 @@ export default defineComponent({
     },
     data: () => ({} as any),
     async mounted() {
-         await new Frame('default-frame', new Interface({})).mount(undefined,this.$el.parentElement)
+        document.body.setAttribute('theme','dark')
+        await new Frame('default-frame', new Interface({})).mount(undefined,this.$el.parentElement)
     }
 })

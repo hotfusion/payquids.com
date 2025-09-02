@@ -8,14 +8,6 @@ export interface IUserCredentials {
     email : string
     password: string
 }
-export interface IBranch {
-    name: string
-}
-
-export interface IProcessor {
-    name : string
-}
-
 export interface ICollections {
     processors: {
         _id    : string;
@@ -28,3 +20,21 @@ export interface ICollections {
         address : string;
     }
 }
+
+
+export interface IBranch {
+    _id        : string;
+    _uid       : string;
+    name       : string;
+    domain     : string;
+    processors : string[]
+}
+
+export interface IProcessor {
+    _id  : string
+    keys : {
+        public : string
+        secret : string
+    }
+}
+

@@ -19,7 +19,7 @@ export default defineComponent({
     },
     async mounted() {
         // set global theme
-        this.setBodyTheme(this.theme);
+        this.setBodyTheme('dark');
 
 
         this._interface = new Interface({
