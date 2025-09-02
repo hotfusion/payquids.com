@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build"   : "sudo node ./node_modules/@hotfusion/ws/_.build.js                    --dir=$PWD",
-    "start"   : "npm run build &&  node ./node_modules/@hotfusion/ws/_.start.js   --dir=$PWD",
-    "deploy"  : "npm run build && node ./node_modules/@hotfusion/ws/_.deploy.js  --dir=$PWD --host=204.12.203.220 --username=administrator --password=!B1mujx22"
+    "build"   : "sudo node ./node_modules/@hotfusion/ws/_.build.js                 --dir=$PWD",
+    "start"   : "npm run build &&  node ./node_modules/@hotfusion/ws/_.service.js  --dir=$PWD",
+    "deploy"  : "npm run build && node ./node_modules/@hotfusion/ws/_.deploy.js    --dir=$PWD --host=204.12.203.220 --username=administrator --password=!B1mujx22"
   },
   "dependencies": {
     "@hotfusion/ws" : "../../workspace/dist"
