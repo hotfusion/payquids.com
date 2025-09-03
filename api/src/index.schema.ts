@@ -37,7 +37,6 @@ export interface IGatewayIntent {
     email:string
     name:string
     phone : string
-    address : string
     currency:"usd" | "cad",
     scope: "invoice" | "products" | "donation",
     mode:"production" | "development"

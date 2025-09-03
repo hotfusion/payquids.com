@@ -27,8 +27,15 @@ export default defineComponent({
 
         this.connector = await Connector.connect(this.uri);
         this._interface = new Interface({
-            theme : this.theme,
-            connector : this.connector
+            theme     : this.theme,
+            connector : this.connector,
+            client : {
+                invoice : 'A10-000001',
+                amount  : 20,
+                name    : 'Vadim Korolov',
+                email   : 'korolov.vadim@gmail.com',
+                phone   : '5149996659'
+            }
         })
         await new Frame('invoice-payment', this._interface)
             .setWidth('100%')

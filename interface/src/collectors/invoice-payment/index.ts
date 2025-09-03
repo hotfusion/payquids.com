@@ -5,14 +5,22 @@ import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
 import {Connector} from "../../../../../workspace/src/_.manager/src/_.utils/client-connector"
 interface IInterfaceSettings {
-    theme: string;
+    theme     : string;
     connector : Connector
+    client   ?: Partial<{
+        name    : string;
+        email   : string;
+        phone   : string;
+        invoice : string;
+        amount  : number;
+    }>
 }
 export class Interface extends Component<any,any>{
 
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
-            theme : 'default',
+            theme  : 'default',
+            client : false
         });
     }
 
@@ -21,8 +29,9 @@ export class Interface extends Component<any,any>{
         let selectedIndex   = 0,
             gateway = new ProcessorGateway(this.getSettings());
 
+        let Client:{name:string,email:string,amount:number,invoice:string,phone:string}
         let navigator = new Navigator({
-            selectedIndex : 2,//selectedIndex,
+            selectedIndex : selectedIndex,
             theme      : 'dark',
             stretch    : true,
             commands   : [{
@@ -31,6 +40,7 @@ export class Interface extends Component<any,any>{
                 label    : 'Continue',
                 position : 'right-bottom',
                 theme    : 'dark',
+                disabled : true,
                 icon     : {
                     code : 'keyboard_double_arrow_right'
                 }
@@ -49,7 +59,16 @@ export class Interface extends Component<any,any>{
                 icon : {
                   code : 'keyboard_double_arrow_right'
                 },
-                component : new ClientInformation(this.getSettings()),
+                component : new ClientInformation(this.getSettings()).on("change", ({complete,client}) => {
+                    let continueButtonFrame:Frame
+                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+                    let paymentGatewayTab
+                        = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+                    Client = client;
+                    paymentGatewayTab.setDisabled(!complete)
+                    continueButtonFrame.setDisabled(!complete)
+
+                }),
             },{
                 id        : 'payment-gateway-tab',
                 title     : 'Payment',
@@ -72,8 +91,11 @@ export class Interface extends Component<any,any>{
             }]
         }).on('command:click', async (e) => {
 
-            let goBackButtonFrame:Frame   = e.toolbar.frame.blocks[0].blocks[0];
-            let continueButtonFrame:Frame = e.toolbar.frame.blocks[1].blocks[0];
+            let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+            let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+            let clientInformationTab = navigator.getFrame().findBlockById('tab:client-information-tab');
+            let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+            let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
 
             if(e.item.id === 'back' && selectedIndex > 0)
                 selectedIndex--;
@@ -84,20 +106,22 @@ export class Interface extends Component<any,any>{
             }
 
             if(selectedIndex === 1){
+                paymentGatewayTab.setDisabled(false)
                 continueButtonFrame.setDisabled(true)
+
                 let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
                     "domain"   : "businessmediagroup.us",
-                    "amount"   : 10,
-                    "email"    : "korolov.vadim@gmail.com",
-                    "name"     : "Korolov Vadim",
-                    "phone"    : "5149996659",
-                    "address"  : "375 marcel laurin",
+                    "amount"   : Client.amount,
+                    "email"    : Client.email,
+                    "name"     : Client.name,
+                    "phone"    : Client.phone,
                     "currency" : "usd",
                     "scope"    : "invoice",
                     "mode"     : "development"
                 })
                 await gateway.initiate({
-                    client_secret, public_key : 'pk_test_51OjSyyD2mFbJWRwtvCs5J5jtZ4SzCl9DXwrbOV4w7rqyyfGEcudlLIVtp1bNMcP0WhSE71RItgZUVBIeIUGpjtE000NacufrOM'
+                    client_secret,
+                    public_key : 'pk_test_51OjSyyD2mFbJWRwtvCs5J5jtZ4SzCl9DXwrbOV4w7rqyyfGEcudlLIVtp1bNMcP0WhSE71RItgZUVBIeIUGpjtE000NacufrOM'
                 })
                 gateway.on('change', async ({complete}) => {
                     continueButtonFrame.setDisabled(!complete);
@@ -109,6 +133,7 @@ export class Interface extends Component<any,any>{
 
             goBackButtonFrame.setDisabled(selectedIndex === 0);
             continueButtonFrame.setBusy(false);
+
         }).on('index:changed', ({index}) => {
             selectedIndex = index;
         });
