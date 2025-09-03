@@ -14,6 +14,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     args : {
+        uri   : "http://0.0.0.0:8085/api",
         theme : 'dark'
     }
 };
