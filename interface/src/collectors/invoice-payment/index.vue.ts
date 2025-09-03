@@ -8,6 +8,9 @@ export default defineComponent({
             type    : String,
             default : 'default',
             required : true
+        },
+        uri : {
+            type : String
         }
     },
     data: () => ({
@@ -22,9 +25,10 @@ export default defineComponent({
         // set global theme
         this.setBodyTheme('dark');
 
-
+        this.connector = await Connector.connect(this.uri);
         this._interface = new Interface({
-            theme : this.theme
+            theme : this.theme,
+            connector : this.connector
         })
         await new Frame('invoice-payment', this._interface)
             .setWidth('100%')

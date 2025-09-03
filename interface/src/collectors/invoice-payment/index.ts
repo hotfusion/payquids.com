@@ -3,11 +3,13 @@ import {Component, Frame, Input,Navigator,Observable} from "@hotfusion/ui";
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
-
+import {Connector} from "../../../../../workspace/src/_.manager/src/_.utils/client-connector"
 interface IInterfaceSettings {
     theme: string;
+    connector : Connector
 }
 export class Interface extends Component<any,any>{
+
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
             theme : 'default',
@@ -15,6 +17,7 @@ export class Interface extends Component<any,any>{
     }
 
     async mount(frame: Frame): Promise<this> {
+
         let selectedIndex = 0, gateway = new ProcessorGateway(this.getSettings());
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
@@ -60,7 +63,7 @@ export class Interface extends Component<any,any>{
                 selectedIndex++;
 
             if(selectedIndex === 1){
-                await gateway.initiate({
+                let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
                     "domain"   : "businessmediagroup.us",
                     "amount"   : 10,
                     "email"    : "korolov.vadim@gmail.com",
@@ -71,6 +74,7 @@ export class Interface extends Component<any,any>{
                     "scope"    : "invoice",
                     "mode"     : "development"
                 })
+                await gateway.initiate({client_secret})
             }
             navigator.updateSettings({
                 selectedIndex
