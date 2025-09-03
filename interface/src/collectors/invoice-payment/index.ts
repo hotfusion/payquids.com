@@ -18,9 +18,11 @@ export class Interface extends Component<any,any>{
 
     async mount(frame: Frame): Promise<this> {
 
-        let selectedIndex = 0, gateway = new ProcessorGateway(this.getSettings());
+        let selectedIndex   = 0,
+            gateway = new ProcessorGateway(this.getSettings());
+
         let navigator = new Navigator({
-            selectedIndex : selectedIndex,
+            selectedIndex : 2,//selectedIndex,
             theme      : 'dark',
             stretch    : true,
             commands   : [{
@@ -28,7 +30,17 @@ export class Interface extends Component<any,any>{
                 type     : 'button',
                 label    : 'Continue',
                 position : 'right-bottom',
-                theme    : 'dark'
+                theme    : 'dark',
+                icon     : {
+                    code : 'keyboard_double_arrow_right'
+                }
+            },{
+                id       : 'back',
+                type     : 'button',
+                label    : 'Go Back',
+                position : 'left-bottom',
+                theme    : 'dark',
+                disabled : true
             }],
             components : [{
                 id        : 'client-information-tab',
@@ -59,10 +71,20 @@ export class Interface extends Component<any,any>{
                 component : new Receipt(this.getSettings()),
             }]
         }).on('command:click', async (e) => {
-            if(e.item.id === 'next' && selectedIndex < 2)
+
+            let goBackButtonFrame:Frame   = e.toolbar.frame.blocks[0].blocks[0];
+            let continueButtonFrame:Frame = e.toolbar.frame.blocks[1].blocks[0];
+
+            if(e.item.id === 'back' && selectedIndex > 0)
+                selectedIndex--;
+
+            if(e.item.id === 'next' && selectedIndex < 2) {
+                continueButtonFrame.setBusy(true);
                 selectedIndex++;
+            }
 
             if(selectedIndex === 1){
+                continueButtonFrame.setDisabled(true)
                 let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
                     "domain"   : "businessmediagroup.us",
                     "amount"   : 10,
@@ -74,11 +96,19 @@ export class Interface extends Component<any,any>{
                     "scope"    : "invoice",
                     "mode"     : "development"
                 })
-                await gateway.initiate({client_secret})
+                await gateway.initiate({
+                    client_secret, public_key : 'pk_test_51OjSyyD2mFbJWRwtvCs5J5jtZ4SzCl9DXwrbOV4w7rqyyfGEcudlLIVtp1bNMcP0WhSE71RItgZUVBIeIUGpjtE000NacufrOM'
+                })
+                gateway.on('change', async ({complete}) => {
+                    continueButtonFrame.setDisabled(!complete);
+                })
             }
             navigator.updateSettings({
                 selectedIndex
             });
+
+            goBackButtonFrame.setDisabled(selectedIndex === 0);
+            continueButtonFrame.setBusy(false);
         }).on('index:changed', ({index}) => {
             selectedIndex = index;
         });

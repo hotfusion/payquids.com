@@ -13,7 +13,7 @@ export class ClientInformation extends Component<any,any>{
     form !: any
     async mount(frame: Frame): Promise<this> {
 
-        frame.setStyle({gap:'10px'});
+        frame.setStyle({gap:'10px', padding:'20px'});
         this.form = {
             invoice : new Frame('invoice-input', new Input({
                 theme : this.getSettings().theme,
