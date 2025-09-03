@@ -34,19 +34,7 @@ export class Interface extends Component<any,any>{
                 icon : {
                   code : 'keyboard_double_arrow_right'
                 },
-                component : new ClientInformation(this.getSettings()).on('completed', () => {
-                    gateway.initiate({
-                        "domain"   : "businessmediagroup.us",
-                        "amount"   : 10,
-                        "email"    : "korolov.vadim@gmail.com",
-                        "name"     : "Korolov Vadim",
-                        "phone"    : "5149996659",
-                        "address"  : "375 marcel laurin",
-                        "currency" : "usd",
-                        "scope"    : "invoice",
-                        "mode"     : "development"
-                    })
-                }),
+                component : new ClientInformation(this.getSettings()),
             },{
                 id        : 'payment-gateway-tab',
                 title     : 'Payment',
@@ -67,10 +55,23 @@ export class Interface extends Component<any,any>{
                 align     : 'center',
                 component : new Receipt(this.getSettings()),
             }]
-        }).on('command:click', (e) => {
+        }).on('command:click', async (e) => {
             if(e.item.id === 'next' && selectedIndex < 2)
                 selectedIndex++;
 
+            if(selectedIndex === 1){
+                await gateway.initiate({
+                    "domain"   : "businessmediagroup.us",
+                    "amount"   : 10,
+                    "email"    : "korolov.vadim@gmail.com",
+                    "name"     : "Korolov Vadim",
+                    "phone"    : "5149996659",
+                    "address"  : "375 marcel laurin",
+                    "currency" : "usd",
+                    "scope"    : "invoice",
+                    "mode"     : "development"
+                })
+            }
             navigator.updateSettings({
                 selectedIndex
             });

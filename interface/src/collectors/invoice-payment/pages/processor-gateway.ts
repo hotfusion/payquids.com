@@ -7,7 +7,8 @@ export class ProcessorGateway extends Component<any,any>{
     constructor(settings: IPaymentGatewaySettings) {
         super({},{});
     }
-    initiate(settings : IGatewayIntent){
+    async initiate(settings : IGatewayIntent){
           // Connector
+
     }
 }
