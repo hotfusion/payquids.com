@@ -13,8 +13,9 @@ export class Interface extends Component<any,any>{
             theme : 'default',
         });
     }
+
     async mount(frame: Frame): Promise<this> {
-        let selectedIndex = 0;
+        let selectedIndex = 0, gateway = new ProcessorGateway(this.getSettings());
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
             theme      : 'dark',
@@ -33,7 +34,19 @@ export class Interface extends Component<any,any>{
                 icon : {
                   code : 'keyboard_double_arrow_right'
                 },
-                component : new ClientInformation(this.getSettings()),
+                component : new ClientInformation(this.getSettings()).on('completed', () => {
+                    gateway.initiate({
+                        "domain"   : "businessmediagroup.us",
+                        "amount"   : 10,
+                        "email"    : "korolov.vadim@gmail.com",
+                        "name"     : "Korolov Vadim",
+                        "phone"    : "5149996659",
+                        "address"  : "375 marcel laurin",
+                        "currency" : "usd",
+                        "scope"    : "invoice",
+                        "mode"     : "development"
+                    })
+                }),
             },{
                 id        : 'payment-gateway-tab',
                 title     : 'Payment',
@@ -42,7 +55,7 @@ export class Interface extends Component<any,any>{
                     code : 'keyboard_double_arrow_right'
                 },
                 align     : 'center',
-                component : new ProcessorGateway(this.getSettings()),
+                component : gateway,
 
             },{
                 id        : 'receipt-tab',

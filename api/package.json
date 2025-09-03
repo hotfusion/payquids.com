@@ -9,7 +9,8 @@
     "deploy"  : "npm run build && node ./node_modules/@hotfusion/ws/_.deploy.js    --dir=$PWD --host=204.12.203.220 --username=administrator --password=!B1mujx22"
   },
   "dependencies": {
-    "@hotfusion/ws" : "../../workspace/dist"
+    "@hotfusion/ws" : "../../workspace/dist",
+    "stripe" : "^18.5.0"
   },
   "private": true
 }
