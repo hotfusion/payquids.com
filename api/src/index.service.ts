@@ -94,9 +94,10 @@ export default class API extends Branches {
         })
 
         return {
-            keys : {
+            domain : document.domain,
+            mode   : document.mode,
+            keys   : {
                 public : processor.keys[document.mode].public,
-                domain : branch.domain
             }
         }
     }

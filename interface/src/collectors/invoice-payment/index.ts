@@ -32,7 +32,7 @@ export class Interface extends Component<any,any>{
             domain : this.getSettings().domain
         })).output;
 
-        let selectedIndex   = 0,
+        let selectedIndex   = 2,
             gateway = new ProcessorGateway(this.getSettings());
 
         let Client:{name:string,email:string,amount:number,invoice:string,phone:string}
@@ -68,8 +68,10 @@ export class Interface extends Component<any,any>{
                 component : new ClientInformation(this.getSettings()).on("change", ({complete,client}) => {
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
                     let paymentGatewayTab
                         = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+
                     Client = client;
                     paymentGatewayTab.setDisabled(!complete)
                     continueButtonFrame.setDisabled(!complete)
@@ -93,13 +95,15 @@ export class Interface extends Component<any,any>{
                     code : 'keyboard_double_arrow_right'
                 },
                 align     : 'center',
-                component : new Receipt(this.getSettings()),
+                component : new Receipt(this.getSettings()).on('mounted',() => {
+                    if(selectedIndex === 2)
+                        Receipt.mount()
+                }),
             }]
         }).on('command:click', async (e) => {
 
             let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
             let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
-            let clientInformationTab = navigator.getFrame().findBlockById('tab:client-information-tab');
             let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
             let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
 
@@ -115,21 +119,19 @@ export class Interface extends Component<any,any>{
                 paymentGatewayTab.setDisabled(false)
                 continueButtonFrame.setDisabled(true)
 
-
                 let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
                     "domain"   : this.getSettings().domain,
                     "amount"   : Client.amount,
                     "email"    : Client.email,
                     "name"     : Client.name,
                     "phone"    : Client.phone,
+                    "mode"     : branch.mode,
                     "currency" : "usd",
                     "scope"    : "invoice",
-                    "mode"     : "development"
-                })
-                await gateway.initiate({
-                    client_secret,
-                    public_key : branch.keys.public
-                })
+                }),public_key = branch.keys.public;
+
+                await gateway.initiate({client_secret, public_key});
+
                 gateway.on('change', async ({complete}) => {
                     continueButtonFrame.setDisabled(!complete);
                 })
