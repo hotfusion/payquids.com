@@ -41,8 +41,8 @@ html,body {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding: 20px;
-      margin-top: -40px;
+      padding: 40px;
+      margin-top: -10px;
       align-items: start;
 
       * {
@@ -88,6 +88,9 @@ html,body {
           animation: fadeSlideIn 0.6s cubic-bezier(.2,.9,.3,1) forwards;
           animation-delay: 0.55s;
 
+          .icon {
+            color: var(--color-accent);
+          }
           .date {
             flex: 1;
             align-items: center;
@@ -121,7 +124,7 @@ html,body {
           }
 
           .digits {
-            font-size: 20px;
+            font-size: 15px;
             height: 15px;
             color: var(--color-accent);
             opacity: 0; /* animate to 0.5 */

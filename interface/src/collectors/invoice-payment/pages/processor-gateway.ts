@@ -4,6 +4,7 @@ import * as Stripe from "@stripe/stripe-js";
 import EventEmitter from "eventemitter3";
 interface IPaymentGatewaySettings {
     theme: string;
+
 }
 
 class Processor {
@@ -117,14 +118,19 @@ export class ProcessorGateway extends Component<any,any>{
     constructor(settings: IPaymentGatewaySettings) {
         super({},{});
     }
-    async initiate(settings : {client_secret:string,public_key:string}) {
-        return new Promise<void>(async resolve => {
-             (await new StripeProcessor(settings.public_key,settings.client_secret).mount(this.getFrame().getTag())).on("mounted",resolve).on("change",(e) => this.emit("change",e))
+
+    async init(public_key:string,client_secret:string) {
+        this.getFrame().setStyle({opacity:0})
+        return new Promise(async resolve => {
+            return (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
+
+                resolve(true)
+                this.getFrame().setStyle({opacity:1});
+            }).on("change",(e) => this.emit("change",e))
         })
-
     }
-
     async mount(frame: Frame): Promise<this> {
+        this.emit('mounted',this)
         return super.mount(frame);
     }
 }

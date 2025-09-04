@@ -9,9 +9,7 @@ export class Receipt extends Component<any,any>{
 
     async mount(frame: Frame): Promise<this> {
         frame.setOrientation('horizontal');
-        frame.setStyle({
-            paddingTop: '30px',
-        })
+
         frame.setHTML(`
             <div class="receipt-header">
               <div class="title">The payment successfully completed  </div>
@@ -24,10 +22,10 @@ export class Receipt extends Component<any,any>{
               
               <div class="invoice">
                  <span class="date">
-                     <span class="material-symbols-outlined">alarm</span>
+                     <span class="material-symbols-outlined icon">alarm</span>
                      ${new Date().toString().split(' ').slice(0,4).join(' ')}
                  </span>
-                 <span class="material-symbols-outlined">order_approve</span> #A01-0000000
+                 <span class="material-symbols-outlined icon">order_approve</span> #A01-0000000
               </div>
             </div>
         `)

@@ -1,5 +1,5 @@
 import "../../_.style/index.less"
-import {Component, Frame, Input,Navigator,Observable} from "@hotfusion/ui";
+import {Button, Component, Frame, Input, Navigator, Observable} from "@hotfusion/ui";
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
@@ -26,16 +26,38 @@ export class Interface extends Component<any,any>{
         });
     }
 
+
     async mount(frame: Frame): Promise<this> {
+
 
         let branch = (await Connector.getRoutes().branch.metadata({
             domain : this.getSettings().domain
         })).output;
 
-        let selectedIndex   = 2,
-            gateway = new ProcessorGateway(this.getSettings());
+        let selectedIndex= 0
 
         let Client:{name:string,email:string,amount:number,invoice:string,phone:string}
+
+        let completionMode = () => {
+            let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+            let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
+            let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+            let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+            continueButtonFrame.setBusy(true)
+            continueButtonFrame.getComponent<Button>().updateSettings({
+                disabled : false,
+                label    : `Return to ${this.getSettings().domain}`
+            })
+            setTimeout(() => {
+                continueButtonFrame.setBusy(false);
+            },1000)
+            goBackButtonFrame.setVisible(false)
+            paymentGatewayTab.setDisabled(false)
+            receiptTab.setDisabled(false)
+            Receipt.mount()
+        }
+
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
             theme      : 'dark',
@@ -65,7 +87,7 @@ export class Interface extends Component<any,any>{
                 icon : {
                   code : 'keyboard_double_arrow_right'
                 },
-                component : new ClientInformation(this.getSettings()).on("change", ({complete,client}) => {
+                component : () => new ClientInformation(this.getSettings()).on("change", ({complete,client}) => {
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
 
@@ -85,7 +107,29 @@ export class Interface extends Component<any,any>{
                     code : 'keyboard_double_arrow_right'
                 },
                 align     : 'center',
-                component : gateway,
+                component : () =>  new ProcessorGateway(this.getSettings()).on('mounted', async (com) => {
+                    let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
+                        "domain"   : this.getSettings().domain,
+                        "amount"   : Client.amount,
+                        "email"    : Client.email,
+                        "name"     : Client.name,
+                        "phone"    : Client.phone,
+                        "mode"     : branch.mode,
+                        "currency" : "usd",
+                        "scope"    : "invoice",
+                    }),public_key = branch.keys.public;
+
+                    await com.init(public_key, client_secret);
+                    let continueButtonFrame:Frame
+                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+                    continueButtonFrame.setBusy(false)
+                }).on('change', ({complete}) => {
+
+                    let continueButtonFrame:Frame
+                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+                    continueButtonFrame.setDisabled(!complete)
+                }),
 
             },{
                 id        : 'receipt-tab',
@@ -95,56 +139,45 @@ export class Interface extends Component<any,any>{
                     code : 'keyboard_double_arrow_right'
                 },
                 align     : 'center',
-                component : new Receipt(this.getSettings()).on('mounted',() => {
-                    if(selectedIndex === 2)
-                        Receipt.mount()
+                component : () => new Receipt(this.getSettings()).on('mounted',() => {
+                    if(selectedIndex === 2) {
+                        completionMode()
+                    }
                 }),
             }]
         }).on('command:click', async (e) => {
 
+            if(e.item.id === 'next' && selectedIndex === 2){
+                return alert('redirect')
+            }
             let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
             let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
             let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
-            let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
+
+            if(e.item.id === 'next')
+               continueButtonFrame.setBusy(true);
 
             if(e.item.id === 'back' && selectedIndex > 0)
                 selectedIndex--;
 
             if(e.item.id === 'next' && selectedIndex < 2) {
-                continueButtonFrame.setBusy(true);
                 selectedIndex++;
             }
 
             if(selectedIndex === 1){
                 paymentGatewayTab.setDisabled(false)
                 continueButtonFrame.setDisabled(true)
-
-                let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
-                    "domain"   : this.getSettings().domain,
-                    "amount"   : Client.amount,
-                    "email"    : Client.email,
-                    "name"     : Client.name,
-                    "phone"    : Client.phone,
-                    "mode"     : branch.mode,
-                    "currency" : "usd",
-                    "scope"    : "invoice",
-                }),public_key = branch.keys.public;
-
-                await gateway.initiate({client_secret, public_key});
-
-                gateway.on('change', async ({complete}) => {
-                    continueButtonFrame.setDisabled(!complete);
-                })
             }
             if(selectedIndex === 2){
-                receiptTab.setDisabled(false)
+                setTimeout(() => {
+                    completionMode()
+                },500)
             }
             navigator.updateSettings({
                 selectedIndex
             });
 
             goBackButtonFrame.setDisabled(selectedIndex === 0);
-            continueButtonFrame.setBusy(false);
 
         }).on('index:changed', ({index}) => {
             selectedIndex = index;
@@ -152,7 +185,6 @@ export class Interface extends Component<any,any>{
 
         let form
             = new Frame('form',navigator);
-
 
         this.on('settings', this.render)
         await frame.push(form);
