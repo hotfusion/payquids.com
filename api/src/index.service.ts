@@ -31,7 +31,7 @@ class Processors{
 class Branches extends Processors {
     @REST.get()
     @Authorization.protect()
-    async 'branches/create'(@REST.schema() branch:Pick<IBranch, "domain" | "name" | "scopes">,ctx:ICTX) {
+    async 'branches/create'(@REST.schema() branch:Pick<IBranch, "domain" | "name" | "scopes" | "mode">,ctx:ICTX) {
         let _id
             = (await Mongo.$.branches.insertOne(branch)).insertedId;
 
@@ -49,6 +49,7 @@ class Branches extends Processors {
             _id: new ObjectId(branch._id)
         });
     }
+
     @REST.post()
     @Authorization.protect()
     async 'branches/:_id/processors/push'(@REST.schema() processor:IBranchProcessorItem,ctx:ICTX) {
@@ -79,7 +80,26 @@ class Branches extends Processors {
         });
     }
 }
+
 export default class API extends Branches {
+
+    @REST.get()
+    async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
+        let document = await Mongo.$.branches.findOne<IBranch>({
+            domain : branch.domain
+        });
+
+        let processor = await Mongo.$.processors.findOne<IProcessor>({
+            _id : document.processors.find(x => x.default)._id
+        })
+
+        return {
+            keys : {
+                public : processor.keys[document.mode].public,
+                domain : branch.domain
+            }
+        }
+    }
 
     @REST.get()
     async 'gateway/intent'(@REST.schema() branch:IGatewayIntent){
@@ -103,8 +123,7 @@ export default class API extends Branches {
             await Mongo.$.customers.insertOne({
                 email   : branch.email,
                 name    : branch.name,
-                phone   : branch.phone,
-                address : branch.address
+                phone   : branch.phone
             });
         }
 

@@ -6,6 +6,7 @@ import {Receipt} from "./pages/receipt";
 import {Connector} from "../../../../../workspace/src/_.manager/src/_.utils/client-connector"
 interface IInterfaceSettings {
     theme     : string;
+    domain    : string;
     connector : Connector
     client   ?: Partial<{
         name    : string;
@@ -20,11 +21,16 @@ export class Interface extends Component<any,any>{
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
             theme  : 'default',
+            domain : '',
             client : false
         });
     }
 
     async mount(frame: Frame): Promise<this> {
+
+        let branch = (await Connector.getRoutes().branch.metadata({
+            domain : this.getSettings().domain
+        })).output;
 
         let selectedIndex   = 0,
             gateway = new ProcessorGateway(this.getSettings());
@@ -109,8 +115,9 @@ export class Interface extends Component<any,any>{
                 paymentGatewayTab.setDisabled(false)
                 continueButtonFrame.setDisabled(true)
 
+
                 let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
-                    "domain"   : "businessmediagroup.us",
+                    "domain"   : this.getSettings().domain,
                     "amount"   : Client.amount,
                     "email"    : Client.email,
                     "name"     : Client.name,
@@ -121,11 +128,14 @@ export class Interface extends Component<any,any>{
                 })
                 await gateway.initiate({
                     client_secret,
-                    public_key : 'pk_test_51OjSyyD2mFbJWRwtvCs5J5jtZ4SzCl9DXwrbOV4w7rqyyfGEcudlLIVtp1bNMcP0WhSE71RItgZUVBIeIUGpjtE000NacufrOM'
+                    public_key : branch.keys.public
                 })
                 gateway.on('change', async ({complete}) => {
                     continueButtonFrame.setDisabled(!complete);
                 })
+            }
+            if(selectedIndex === 2){
+                receiptTab.setDisabled(false)
             }
             navigator.updateSettings({
                 selectedIndex

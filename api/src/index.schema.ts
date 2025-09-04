@@ -3,6 +3,7 @@ export interface IBranch {
     _uid       : string;
     name       : string;
     domain     : string;
+    mode       : "production" | "development";
     processors : {_id:string, default :boolean}[]
     scopes     : ( "donation" | "invoice" | "products")[]
 }
@@ -41,6 +42,7 @@ export interface IGatewayIntent {
     scope: "invoice" | "products" | "donation",
     mode:"production" | "development"
 }
+
 export type ICollections = {
     processors  : IProcessor;
     branches    : IBranch

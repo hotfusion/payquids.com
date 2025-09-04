@@ -17,8 +17,8 @@ export class Receipt extends Component<any,any>{
             <div class="receipt-header">
               <div class="title">The payment successfully completed  </div>
               <div class="amount">$39.00</div>
-              <div class="name">Vadim Korolov</div>
-              <div class="card"><span class="digits">**** **** ****</span> <span class="last-digits">4321</span></div>
+              <div class="name">Vadim Korolov <span class="card"><span class="digits">**** **** ****</span> <span class="last-digits">4321</span></span></div>
+              
               <div class="invoice">Invoice: #A01-0000000</div>
             </div>
         `)

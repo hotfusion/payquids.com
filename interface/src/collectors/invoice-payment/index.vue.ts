@@ -29,6 +29,7 @@ export default defineComponent({
         this._interface = new Interface({
             theme     : this.theme,
             connector : this.connector,
+            domain    : "businessmediagroup.us",
             client : {
                 invoice : 'A10-000001',
                 amount  : 20,
