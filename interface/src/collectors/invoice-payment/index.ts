@@ -34,7 +34,7 @@ export class Interface extends Component<any,any>{
             domain : this.getSettings().domain
         })).output;
 
-        let selectedIndex= 0
+        let selectedIndex= 0,charge:{amount:0, currency:'USD'};
 
         let Client:{name:string,email:string,amount:number,invoice:string,phone:string}
 
@@ -49,13 +49,15 @@ export class Interface extends Component<any,any>{
                 disabled : false,
                 label    : `Return to ${this.getSettings().domain}`
             })
-            setTimeout(() => {
-                continueButtonFrame.setBusy(false);
-            },1000)
+
             goBackButtonFrame.setVisible(false)
             paymentGatewayTab.setDisabled(false)
             receiptTab.setDisabled(false)
-            Receipt.mount()
+
+            setTimeout(() => {
+                continueButtonFrame.setBusy(false);
+                Receipt.mount(charge)
+            },500)
         }
 
         let navigator = new Navigator({
@@ -120,11 +122,24 @@ export class Interface extends Component<any,any>{
                     }),public_key = branch.keys.public;
 
                     await com.init(public_key, client_secret);
+
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
-                    continueButtonFrame.setBusy(false)
-                }).on('change', ({complete}) => {
 
+                    continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
+                        continueButtonFrame.setBusy(true);
+
+                        let { amount, error }  = charge = await com.charge()
+
+                        if(!error){
+                            selectedIndex++;
+                            navigator.updateSettings({
+                                selectedIndex
+                            });
+                        }
+                    });
+
+                }).on('change', ({complete}) => {
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
 
@@ -147,9 +162,9 @@ export class Interface extends Component<any,any>{
             }]
         }).on('command:click', async (e) => {
 
-            if(e.item.id === 'next' && selectedIndex === 2){
-                return alert('redirect')
-            }
+            if(selectedIndex === 1)
+                return;
+
             let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
             let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
             let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
@@ -163,21 +178,16 @@ export class Interface extends Component<any,any>{
             if(e.item.id === 'next' && selectedIndex < 2) {
                 selectedIndex++;
             }
+            goBackButtonFrame.setDisabled(selectedIndex === 0)
 
             if(selectedIndex === 1){
                 paymentGatewayTab.setDisabled(false)
                 continueButtonFrame.setDisabled(true)
             }
-            if(selectedIndex === 2){
-                setTimeout(() => {
-                    completionMode()
-                },500)
-            }
+
             navigator.updateSettings({
                 selectedIndex
             });
-
-            goBackButtonFrame.setDisabled(selectedIndex === 0);
 
         }).on('index:changed', ({index}) => {
             selectedIndex = index;

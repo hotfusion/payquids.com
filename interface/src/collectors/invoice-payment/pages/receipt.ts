@@ -6,14 +6,17 @@ export class Receipt extends Component<any,any>{
     constructor(settings: IReceiptSettings) {
         super({},{});
     }
-
+    static frame : Frame
     async mount(frame: Frame): Promise<this> {
         frame.setOrientation('horizontal');
-
-        frame.setHTML(`
+        Receipt.frame = frame;
+        return super.mount(frame);
+    }
+    static mount(charge:any){
+        Receipt.frame .setHTML(`
             <div class="receipt-header">
               <div class="title">The payment successfully completed  </div>
-              <div class="amount">$39.00</div>
+              <div class="amount">$${charge.amount.toFixed(2)}</div>
               <div class="details">
                  <span class="name">Vadim Korolov </span>
                  <span class="digits">**** **** ****</span> 
@@ -29,9 +32,6 @@ export class Receipt extends Component<any,any>{
               </div>
             </div>
         `)
-        return super.mount(frame);
-    }
-    static mount(){
         document.body.querySelector('.receipt-header').setAttribute('mounted','true');
     }
 }

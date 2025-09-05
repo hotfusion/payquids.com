@@ -9,7 +9,9 @@ interface IPaymentGatewaySettings {
 
 class Processor {
     mount(...args: any[]) {}
-    charge(){}
+    charge(){
+
+    }
 }
 
 class StripeProcessor extends EventEmitter implements Processor  {
@@ -112,9 +114,19 @@ class StripeProcessor extends EventEmitter implements Processor  {
 
         return this;
     }
-    charge(){}
+    async charge(){
+        let { error,paymentIntent  } = await this.stripe.confirmPayment({
+            elements : this.elements,
+            redirect : 'if_required',
+            expand: ['payment_method']
+        });
+
+        console.log(paymentIntent)
+        return { amount:paymentIntent.amount/100, error }
+    }
 }
 export class ProcessorGateway extends Component<any,any>{
+    processor: Processor;
     constructor(settings: IPaymentGatewaySettings) {
         super({},{});
     }
@@ -122,12 +134,15 @@ export class ProcessorGateway extends Component<any,any>{
     async init(public_key:string,client_secret:string) {
         this.getFrame().setStyle({opacity:0})
         return new Promise(async resolve => {
-            return (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
+            return this.processor = (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
 
                 resolve(true)
                 this.getFrame().setStyle({opacity:1});
             }).on("change",(e) => this.emit("change",e))
         })
+    }
+    charge(){
+        return this.processor.charge()
     }
     async mount(frame: Frame): Promise<this> {
         this.emit('mounted',this)
