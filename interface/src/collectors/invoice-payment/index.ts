@@ -30,6 +30,7 @@ export class Interface extends Component<any,any>{
     async mount(frame: Frame): Promise<this> {
 
 
+        console.log(Connector.getRoutes())
         let branch = (await Connector.getRoutes().branch.metadata({
             domain : this.getSettings().domain
         })).output;

@@ -1,4 +1,4 @@
-export interface IBranch {
+export interface IBranch  {
     _id        : string;
     _uid       : string;
     name       : string;

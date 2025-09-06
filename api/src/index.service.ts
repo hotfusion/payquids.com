@@ -85,20 +85,21 @@ class Branches extends Processors {
 export default class API extends Branches {
     @REST.get()
     async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
-        let document = await Mongo.$.branches.findOne<IBranch>({
+        let document= await Mongo.$.branches.findOne<IBranch>({
             domain : branch.domain
         });
 
-        let processor = await Mongo.$.processors.findOne<IProcessor>({
+        let processor= await Mongo.$.processors.findOne<IProcessor>({
             _id : document.processors.find(x => x.default)._id
         })
 
-        let token = {
+        let token= {
+            _pid    : processor._id,
             token   : Date.now(),
-            created : Date.now(),
-            _pid    : processor._id
+            created : Date.now()
         }
-        this.tokens.push(token)
+
+        this.tokens.push(token);
         return {
             token  : token,
             domain : document.domain,
@@ -109,20 +110,20 @@ export default class API extends Branches {
         }
     }
     @REST.post()
-    async 'branch/charge'(@REST.schema() branch : Pick<IBranch, "domain" > & {token:string}){
-        let document = await Mongo.$.branches.findOne<IBranch>({
+    async 'branch/charge'(@REST.schema() branch : Pick<IBranch, "domain" > & { token : string }){
+        let document= await Mongo.$.branches.findOne<IBranch>({
             domain : branch.domain
         });
 
-        let processor = await Mongo.$.processors.findOne<IProcessor>({
+        let processor= await Mongo.$.processors.findOne<IProcessor>({
             _id : document.processors.find(x => x.default)._id
         })
 
         return {
-            domain : document.domain,
-            mode   : document.mode,
-            keys   : {
-                public : processor.keys[document.mode].public,
+            domain   : document.domain,
+            mode     : document.mode,
+            keys     : {
+              public : processor.keys[document.mode].public,
             }
         }
     }
