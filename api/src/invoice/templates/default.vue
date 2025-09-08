@@ -70,13 +70,9 @@
       <p v-if="type === 'collectors'">Thank you for choosing our collection services!</p>
       <p v-else>Thank you for choosing our services!</p>
       <ul>
-        <li>Payment Terms: Due within 15 days from invoice date.</li>
-        <li>Late Payment: A 1.5% monthly interest fee applies to overdue balances.</li>
-        <li v-if="type === 'collectors'">Service Guarantee: We ensure compliance with all applicable collection regulations.</li>
-        <li v-else>Service Guarantee: We offer a 30-day satisfaction guarantee; contact us for issues.</li>
-        <li v-if="type === 'collectors'">Dispute Resolution: Any disputes must be reported within 7 days of invoice receipt.</li>
-        <li v-else>Cancellation Policy: Cancellations require 48-hour notice; fees may apply.</li>
-        <li>Contact: For inquiries, reach us at {{ merchant.email }} or {{ merchant.phone }}.</li>
+        <li v-for="policy in policies" :key="policy.policy">
+          {{ formatPolicy(policy.policy) }}: {{ policy.value }}
+        </li>
       </ul>
     </div>
   </div>
@@ -109,6 +105,19 @@ export default defineComponent({
     subtotal: { type: Number, required: true },
     tax: { type: Number, required: true },
     total: { type: Number, required: true },
+    policies: {
+      type: Array,
+      required: true,
+      validator: (arr: any[]) => arr.every(item => 'policy' in item && 'value' in item),
+    },
+  },
+  methods: {
+    formatPolicy(policy: string): string {
+      return policy
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+    },
   },
 });
 </script>

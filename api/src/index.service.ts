@@ -1,13 +1,11 @@
 import {REST, Controller, Authorization, Mongo, ICTX, ObjectId} from "@hotfusion/ws";
-
 import {IBranch, IProcessor, ICollections, IPagination, IBranchProcessorItem, IGatewayIntent} from "./index.schema";
-
+import {Invoice} from  "./invoice/"
 import Stripe from "stripe";
 
-
 @Authorization.provider('local')
-@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts'])
-class Processors{
+@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices'])
+class Processors extends Invoice{
     @REST.post()
     @Authorization.protect()
     async 'processors/create'(@REST.schema() processor:Pick<IProcessor, "keys" | "name" | "gateway" | "email" >, ctx:ICTX){

@@ -16,6 +16,7 @@ export interface IBranch  {
 export interface ICharge {
 
 }
+
 export interface IProcessor {
     _id     : string
     _uid    : string;
@@ -50,6 +51,23 @@ export interface IGatewayIntent {
     scope: "invoice" | "products" | "donation",
     mode:"production" | "development"
 }
+
+export interface IInvoice {
+    _id    : string;
+    amount : {
+        value    : number
+        currency : 'usd' | 'cad'
+    }
+    processor : {
+        _id : string
+    },
+    branch  : {
+        _id : string,
+    },
+    paid    : boolean,
+    due     : number
+    created : string
+}
 export interface IReceipt {
     _id : string
     domain   : string
@@ -72,6 +90,7 @@ export interface IReceipt {
 export type ICollections = {
     processors  : IProcessor;
     branches    : IBranch
+    receipts    : IReceipt
     customers   : any
-    receipts    : any
+    invoices    : IInvoice
 }

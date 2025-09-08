@@ -34,12 +34,18 @@ interface CollectorItem {
     amount: number;
 }
 
-export class Invoice {
+interface Policy {
+    policy: string;
+    value: string;
+}
+
+export class InvoiceModule {
     constructor(private customer: Customer, private merchant: Merchant) {}
 
     async create(
         type: 'services' | 'products' | 'collectors',
-        items: Array<ServiceItem | ProductItem | CollectorItem>
+        items: Array<ServiceItem | ProductItem | CollectorItem>,
+        policies: Policy[]
     ): Promise<string> {
         const date = new Date().toLocaleDateString('en-US', {
             year: 'numeric',
@@ -83,6 +89,7 @@ export class Invoice {
             subtotal,
             tax,
             total,
+            policies,
         });
 
         // Render the Vue component to a string
@@ -91,4 +98,3 @@ export class Invoice {
     }
 }
 
-export default Invoice;
