@@ -29,8 +29,6 @@ export class Interface extends Component<any,any>{
 
     async mount(frame: Frame): Promise<this> {
 
-
-        console.log(Connector.getRoutes())
         let branch = (await Connector.getRoutes().branch.metadata({
             domain : this.getSettings().domain
         })).output;
@@ -140,6 +138,16 @@ export class Interface extends Component<any,any>{
                         }
                     });
 
+                }).on('charge', async ({error,intent}) => {
+                    if(!error){
+                        let charge = await Connector.getRoutes().branch.charge({
+                            domain : this.getSettings().domain,
+                            id     : intent.id
+                        });
+                        if(charge.output.complete){
+
+                        }
+                    }
                 }).on('change', ({complete}) => {
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
@@ -166,9 +174,12 @@ export class Interface extends Component<any,any>{
             if(selectedIndex === 1)
                 return;
 
-            let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
-            let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
-            let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+            let goBackButtonFrame:Frame
+                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+            let continueButtonFrame:Frame
+                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+            let paymentGatewayTab
+                = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
 
             if(e.item.id === 'next')
                continueButtonFrame.setBusy(true);
@@ -176,20 +187,21 @@ export class Interface extends Component<any,any>{
             if(e.item.id === 'back' && selectedIndex > 0)
                 selectedIndex--;
 
-            if(e.item.id === 'next' && selectedIndex < 2) {
+            if(e.item.id === 'next' && selectedIndex < 2)
                 selectedIndex++;
-            }
-            goBackButtonFrame.setDisabled(selectedIndex === 0)
+
+            goBackButtonFrame
+                .setDisabled(selectedIndex === 0)
 
             if(selectedIndex === 1){
-                paymentGatewayTab.setDisabled(false)
-                continueButtonFrame.setDisabled(true)
+                paymentGatewayTab
+                    .setDisabled(false);
+
+                continueButtonFrame
+                    .setDisabled(true);
             }
 
-            navigator.updateSettings({
-                selectedIndex
-            });
-
+            navigator.updateSettings({selectedIndex});
         }).on('index:changed', ({index}) => {
             selectedIndex = index;
         });
@@ -201,7 +213,6 @@ export class Interface extends Component<any,any>{
         await frame.push(form);
         return super.mount(frame);
     }
-
     render(){
         console.log('theme',this.getSettings().theme);
     }

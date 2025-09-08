@@ -1,13 +1,21 @@
+// TODO:
+// this is not working, also (@REST.schema() branch : IBranch & { token : IString })) wont work
+//@ts-ignore
+import type {TString} from "./default.types";
+export interface IProcessor {_id:string, default :boolean}[]
 export interface IBranch  {
     _id        : string;
     _uid       : string;
     name       : string;
-    domain     : string;
+    domain     : TString<{min:3,max:200}>;
     mode       : "production" | "development";
-    processors : {_id:string, default :boolean}[]
+    processors : IProcessor[]
     scopes     : ( "donation" | "invoice" | "products")[]
 }
 
+export interface ICharge {
+
+}
 export interface IProcessor {
     _id     : string
     _uid    : string;
@@ -42,9 +50,28 @@ export interface IGatewayIntent {
     scope: "invoice" | "products" | "donation",
     mode:"production" | "development"
 }
-
+export interface IReceipt {
+    _id : string
+    domain   : string
+    amount   : number
+    created  : number
+    notified : false,
+    processor : {
+        _id : string
+    },
+    branch : {
+        _id : string,
+    },
+    metadata : {
+        customer : {
+            id : string,
+            ip : string,
+        }
+    }
+}
 export type ICollections = {
     processors  : IProcessor;
     branches    : IBranch
     customers   : any
+    receipts    : any
 }

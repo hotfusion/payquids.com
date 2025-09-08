@@ -2,9 +2,11 @@ import {REST, Controller, Authorization, Mongo, ICTX, ObjectId} from "@hotfusion
 
 import {IBranch, IProcessor, ICollections, IPagination, IBranchProcessorItem, IGatewayIntent} from "./index.schema";
 
+import Stripe from "stripe";
+
 
 @Authorization.provider('local')
-@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers'])
+@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts'])
 class Processors{
     @REST.post()
     @Authorization.protect()
@@ -83,15 +85,39 @@ class Branches extends Processors {
 }
 
 export default class API extends Branches {
+    private getBranchDocument(query:{domain:string}){
+        return Mongo.$.branches.findOne<IBranch>(query)
+    }
+    private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
+        let branch
+            = await this.getBranchDocument({domain})
+
+        if(!branch?.name)
+            throw new Error("domain was not found");
+
+
+        let processor= await Mongo.$.processors.findOne<IProcessor>({
+            _id : branch.processors.find(x => x.default)._id
+        })
+        if(!processor)
+            throw new Error("processor was not found");
+
+        return {branch,processor};
+    }
     @REST.get()
     async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
-        let document= await Mongo.$.branches.findOne<IBranch>({
-            domain : branch.domain
-        });
+        let document
+            = await this.getBranchDocument(branch);
+
+        if(!document?.name)
+            throw new Error("domain was not found");
 
         let processor= await Mongo.$.processors.findOne<IProcessor>({
             _id : document.processors.find(x => x.default)._id
         })
+
+        if(!processor)
+            throw new Error("processor was not found");
 
         let token= {
             _pid    : processor._id,
@@ -100,6 +126,7 @@ export default class API extends Branches {
         }
 
         this.tokens.push(token);
+
         return {
             token  : token,
             domain : document.domain,
@@ -110,66 +137,79 @@ export default class API extends Branches {
         }
     }
     @REST.post()
-    async 'branch/charge'(@REST.schema() branch : Pick<IBranch, "domain" > & { token : string }){
-        let document= await Mongo.$.branches.findOne<IBranch>({
-            domain : branch.domain
-        });
+    async 'branch/charge'(@REST.schema() charge : Pick<IBranch, "domain" > & { id : string }){
+        let {branch,processor} = await this.getBranch(charge.domain)
 
-        let processor= await Mongo.$.processors.findOne<IProcessor>({
-            _id : document.processors.find(x => x.default)._id
-        })
+        let stripe
+            = new Stripe(processor.keys[branch.mode].secret);
 
+        let intent = await stripe.paymentIntents.retrieve(
+            charge.id
+        );
+
+        if(intent.status === 'succeeded'){
+            await Mongo.$.receipts.insertOne({
+                domain   : charge.domain,
+                amount   : intent.amount_received/100,
+                created  : new Date().valueOf(),
+                notified : false,
+                receipt  : {
+                    _id : undefined
+                },
+                processor : {
+                    _id : processor._id
+                },
+                branch : {
+                    _id : branch._id,
+                },
+                metadata : {
+                    customer : {
+                        id : intent.customer,
+                        ip : intent.metadata.customer_ip,
+                    }
+                }
+            })
+        }
         return {
-            domain   : document.domain,
-            mode     : document.mode,
-            keys     : {
-              public : processor.keys[document.mode].public,
-            }
+            domain    : charge.domain,
+            completed : intent.status === 'succeeded'
         }
     }
     @REST.get()
-    async 'gateway/intent'(@REST.schema() branch:IGatewayIntent){
-
-        let document = await Mongo.$.branches.findOne({
-            domain : branch.domain
-        });
-
-        let processor = await Mongo.$.processors.findOne({
-            _id : document.processors.find(x => x.default)._id
-        })
+    async 'gateway/intent'(@REST.schema() intent:IGatewayIntent){
+        let {branch,processor} = await this.getBranch(intent.domain)
 
         let stripe
-            = require('stripe')(processor.keys[branch.mode].secret);
+            = new Stripe(processor.keys[branch.mode].secret);
 
         let customer =  await Mongo.$.customers.findOne({
-            email : branch.email
+            email : intent.email
         });
 
         if(!customer){
             await Mongo.$.customers.insertOne({
-                email   : branch.email,
-                name    : branch.name,
-                phone   : branch.phone
+                email   : intent.email,
+                name    : intent.name,
+                phone   : intent.phone
             });
         }
 
         let profile = (await stripe.customers.list({
-            email : branch.email, limit: 1
+            email : intent.email, limit: 1
         }))?.data?.[0];
 
-        console.log(profile);
         if(!profile) {
             profile = await stripe.customers.create({
-                email   : branch.email,
-                name    : branch.name,
-                phone   : branch.phone
+                email   : intent.email,
+                name    : intent.name,
+                phone   : intent.phone
             });
         }
 
 
         const {client_secret} = await stripe.paymentIntents.create({
-            amount   : Number(branch.amount) * 100,
-            currency : branch.currency,
+            amount   : Number(intent.amount) * 100,
+            currency : intent.currency,
             customer : profile.id,
             // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
             automatic_payment_methods: {

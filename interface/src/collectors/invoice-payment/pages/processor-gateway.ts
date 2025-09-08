@@ -106,6 +106,8 @@ class StripeProcessor extends EventEmitter implements Processor  {
         }).on('blur',() => {
             this.isFocus = false;
         });
+
+
         dom.style.padding = '20px';
         dom.style.paddingTop = '40px';
         this.card.mount(dom);
@@ -120,8 +122,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
             redirect : 'if_required',
             expand: ['payment_method']
         });
-
-        console.log(paymentIntent)
+        this.emit('charge', {error,intent:paymentIntent});
         return { amount:paymentIntent.amount/100, error }
     }
 }
@@ -138,7 +139,7 @@ export class ProcessorGateway extends Component<any,any>{
 
                 resolve(true)
                 this.getFrame().setStyle({opacity:1});
-            }).on("change",(e) => this.emit("change",e))
+            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
         })
     }
     charge(){

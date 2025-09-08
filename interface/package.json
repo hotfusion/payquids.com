@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "storybook": "storybook dev -p 6008",
+    "storybook": "npm --prefix ../../ui run clean && storybook dev -p 6008",
     "build-storybook": "storybook build"
   },
   "repository": {
