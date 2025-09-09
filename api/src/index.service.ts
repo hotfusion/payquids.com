@@ -32,7 +32,7 @@ class Branches extends Processors {
     tokens = []
     @REST.get()
     @Authorization.protect()
-    async 'branches/create'(@REST.schema() branch:Pick<IBranch, "domain" | "name" | "scopes" | "mode">,ctx:ICTX) {
+    async 'branches/create'(@REST.schema() branch:Pick<IBranch, "domain" | "name" | "scopes" | "mode" | "company">,ctx:ICTX) {
         let _id
             = (await Mongo.$.branches.insertOne(branch)).insertedId;
 
