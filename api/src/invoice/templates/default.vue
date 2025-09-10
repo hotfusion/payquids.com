@@ -124,7 +124,7 @@ export default defineComponent({
 
 <style scoped>
 .invoice-container {
-  max-width: 600px;
+  max-width: 500px;
   margin: 0 auto;
   background-color: #fff;
   padding: 20px;

@@ -175,35 +175,33 @@ export default class API extends Branches {
     }
     @REST.get()
     async 'gateway/intent'(@REST.schema() intent:IGatewayIntent){
-        let {branch,processor} = await this.getBranch(intent.domain)
+        let {branch,processor}
+               = await this.getBranch(intent.domain);
 
         let stripe
             = new Stripe(processor.keys[branch.mode].secret);
 
-        let customer =  await Mongo.$.customers.findOne({
+        let customer = await Mongo.$.customers.findOne({
             email : intent.email
         });
 
-        if(!customer){
+        if(!customer)
             await Mongo.$.customers.insertOne({
                 email   : intent.email,
                 name    : intent.name,
                 phone   : intent.phone
             });
-        }
 
         let profile = (await stripe.customers.list({
             email : intent.email, limit: 1
         }))?.data?.[0];
 
-        if(!profile) {
+        if(!profile)
             profile = await stripe.customers.create({
                 email   : intent.email,
                 name    : intent.name,
                 phone   : intent.phone
             });
-        }
-
 
         const {client_secret} = await stripe.paymentIntents.create({
             amount   : Number(intent.amount) * 100,

@@ -57,7 +57,7 @@ export interface IGatewayIntent {
 
 
 
-interface Customer {
+interface ICustomer {
     email: string;
     name: string;
     address: string;
@@ -131,6 +131,6 @@ export type ICollections = {
     processors  : IProcessor;
     branches    : IBranch
     receipts    : IReceipt
-    customers   : any
+    customers   : ICustomer
     invoices    : IInvoice
 }
