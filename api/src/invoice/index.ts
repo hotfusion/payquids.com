@@ -2,21 +2,16 @@
 import {InvoiceModule} from "./module";
 import {Authorization, ICTX, Mongo, ObjectId, REST} from "@hotfusion/ws";
 import {IInvoice} from "../index.schema";
+import {Customers} from "../customers";
 
-export class Invoice  {
+export class Invoice extends Customers {
     @REST.post()
     @Authorization.protect()
-    async 'invoices/create'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
+    async 'invoices/:_bid/:_pid/:_cid/create'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
         let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
-    @REST.post()
-    @Authorization.protect()
-    async 'invoices/list'({},ctx:ICTX){
-        return await Mongo.$.invoices.find({}).toArray();
-    }
-
     @REST.post()
     @Authorization.protect()
     /**
@@ -24,21 +19,21 @@ export class Invoice  {
      *
      * @param {number} invoice -
      */
-    async 'invoices/:_id/update'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
+    async 'invoices/:_bid/update/:_iid'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
         let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_id/delete'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
+    async 'invoices/:_bid/delete/:_iid'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
         let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_id/read'({},ctx:ICTX){
+    async 'invoices/:_bid/read/:_iid'({},ctx:ICTX){
         let invoice = await Mongo.$.invoices.findOne({
             _id : new ObjectId(ctx.getParams()._id)
         });
@@ -47,12 +42,18 @@ export class Invoice  {
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_id/:_zid/html'({},ctx:ICTX){
+    async 'invoices/:_bid/list'({},ctx:ICTX){
+        return await Mongo.$.invoices.find({}).toArray();
+    }
+    @REST.post()
+    @Authorization.protect()
+    async 'invoices/:_bid/html/:_id'({},ctx:ICTX){
         console.log(ctx.getParams())
         let document = await Mongo.$.invoices.findOne({
             _id : new ObjectId(ctx.getParams()._id)
         });
 
+        console.log('document:',document)
         const invoice = await new InvoiceModule(
             { email: 'jane@example.com', name: 'Jane Smith', address: '123 Client Road, City, State, ZIP' },
             { name: 'Collector Solutions', address: '789 Service Avenue, City, State, ZIP', phone: '(123) 456-7890', email: 'support@collectorsolutions.com' }

@@ -57,10 +57,12 @@ export interface IGatewayIntent {
 
 
 
-interface ICustomer {
-    email: string;
-    name: string;
-    address: string;
+export interface ICustomer {
+    id       : string,
+    email    : TString<{min:10,max:100}>;
+    name    ?: TString<{min:10,max:100}>;
+    address ?: TString<{min:10,max:100}>;
+    phone   ?: string;
 }
 
 interface IMerchant {
@@ -93,16 +95,22 @@ interface IPolicy {
     policy: string;
     value: string;
 }
+type date = string
 export interface IInvoice {
     _id    : string;
     // processor _id
     _pid   : TString<{min:10,max:100,description:'Processor _id'}>
+    // branch id
+    _bid   : TString<{min:10,max:100,description:'Processor _id'}>
+    // customer id
+    _cid : TString<{min:10,max:100,description:'Processor _id'}>
+
     amount : {
         value    : number
         currency : 'usd' | 'cad'
     }
     paid    : boolean
-    due     : number
+    due     : date
     created : string
     type    : 'services' | 'products' | 'collectors',
     items   : (IServiceItem | IProductItem | ICollectorItem)[]

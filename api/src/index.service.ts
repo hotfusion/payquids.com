@@ -1,87 +1,10 @@
 import {REST, Controller, Authorization, Mongo, ICTX, ObjectId} from "@hotfusion/ws";
 import {IBranch, IProcessor, ICollections, IPagination, IBranchProcessorItem, IGatewayIntent} from "./index.schema";
-import {Invoice} from  "./invoice/"
+import {Branches} from "./branches";
 import Stripe from "stripe";
 
-@Authorization.provider('local')
 @Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices'])
-class Processors extends Invoice{
-    @REST.post()
-    @Authorization.protect()
-    async 'processors/create'(@REST.schema() processor:Pick<IProcessor, "keys" | "name" | "gateway" | "email" >, ctx:ICTX){
-        let _id
-            = (await Mongo.$.processors.insertOne(processor)).insertedId;
-
-        return {_id}
-    }
-    @REST.get()
-    @Authorization.protect()
-    async 'processors/list'(@REST.schema() pagination:IPagination, ctx:ICTX){
-        return await Mongo.$.processors.find({}).toArray()
-    }
-    @REST.post()
-    @Authorization.protect()
-    async 'processors/delete'(@REST.schema() processor:Pick<IProcessor, "_id" >, ctx:ICTX){
-        return await Mongo.$.processors.deleteOne({
-            _id: new ObjectId(processor._id)
-        })
-    }
-}
-
-class Branches extends Processors {
-    tokens = []
-    @REST.get()
-    @Authorization.protect()
-    async 'branches/create'(@REST.schema() branch:Pick<IBranch, "domain" | "name" | "scopes" | "mode" | "company">,ctx:ICTX) {
-        let _id
-            = (await Mongo.$.branches.insertOne(branch)).insertedId;
-
-        return {_id}
-    }
-    @REST.get()
-    @Authorization.protect()
-    async 'branches/list'(@REST.schema() pagination:IPagination,ctx:ICTX) {
-        return  await Mongo.$.branches.find({}).toArray()
-    }
-    @REST.post()
-    @Authorization.protect()
-    async 'branches/delete'(@REST.schema() branch:Pick<IBranch, "_id">,ctx:ICTX) {
-        return await Mongo.$.branches.deleteOne({
-            _id: new ObjectId(branch._id)
-        });
-    }
-
-    @REST.post()
-    @Authorization.protect()
-    async 'branches/:_id/processors/push'(@REST.schema() processor:IBranchProcessorItem,ctx:ICTX) {
-
-        let document = await Mongo.$.branches.findOne({
-            _id: new ObjectId(ctx.getParams()._id as string)
-        });
-
-        let exists
-            = document.processors.find(x => x._id.toString() === processor._id)
-
-        if(!exists) {
-            document.processors = document.processors.map((processor: any) => {
-                if(processor.default)
-                    processor.default = false;
-                return processor
-            });
-            document.processors.push({...processor,_id:new ObjectId(processor._id)});
-        }
-
-
-        return await Mongo.$.branches.updateOne({
-            _id: new ObjectId(ctx.getParams()._id as string)
-        }, {
-            $set: {
-                processors: document.processors
-            }
-        });
-    }
-}
-
+@Authorization.provider('local')
 export default class API extends Branches {
     private getBranchDocument(query:{domain:string}){
         return Mongo.$.branches.findOne<IBranch>(query)
