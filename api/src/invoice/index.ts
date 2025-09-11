@@ -47,7 +47,7 @@ export class Invoice  {
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_id/html'({},ctx:ICTX){
+    async 'invoices/:_id/:_zid/html'({},ctx:ICTX){
         console.log(ctx.getParams())
         let document = await Mongo.$.invoices.findOne({
             _id : new ObjectId(ctx.getParams()._id)
