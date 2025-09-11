@@ -1,5 +1,5 @@
 import {REST, Controller, Authorization, Mongo, ICTX, ObjectId} from "@hotfusion/ws";
-import {IBranch, IProcessor, ICollections, IPagination, IBranchProcessorItem, IGatewayIntent} from "./index.schema";
+import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
 import Stripe from "stripe";
 
@@ -41,7 +41,6 @@ export default class API extends Branches {
             _id : document.processors.find(x => x.default)._id
         })
 
-        console.log(processor)
         if(!processor)
             throw new Error("processor was not found");
 
@@ -53,14 +52,6 @@ export default class API extends Branches {
 
         this.tokens.push(token);
 
-        console.log({
-            token  : token,
-            domain : document.domain,
-            mode   : document.mode,
-            keys   : {
-                public : processor.keys[document.mode].public,
-            }
-        })
         return {
             token  : token,
             domain : document.domain,
@@ -121,23 +112,25 @@ export default class API extends Branches {
             email : intent.email
         });
 
+
         if(!customer)
-            await Mongo.$.customers.insertOne({
+            await this[`customers/${branch._id}/create`]({
                 email   : intent.email,
                 name    : intent.name,
                 phone   : intent.phone
-            });
+            })
 
-        let profile = (await stripe.customers.list({
+        let profile= (await stripe.customers.list({
             email : intent.email, limit: 1
         }))?.data?.[0];
 
-        if(!profile)
+        if(!profile) {
             profile = await stripe.customers.create({
-                email   : intent.email,
-                name    : intent.name,
-                phone   : intent.phone
+                email: intent.email,
+                name: intent.name,
+                phone: intent.phone
             });
+        }
 
         const {client_secret} = await stripe.paymentIntents.create({
             amount   : Number(intent.amount) * 100,

@@ -58,11 +58,16 @@ export interface IGatewayIntent {
 
 
 export interface ICustomer {
-    id       : string,
+    _id      : string;
+    _bid     : string;
     email    : TString<{min:10,max:100}>;
     name    ?: TString<{min:10,max:100}>;
     address ?: TString<{min:10,max:100}>;
     phone   ?: TString<{min:10,max:100}>;
+    profiles : {
+        id   : string,
+        _pid : string
+    }[];
 }
 
 interface IMerchant {

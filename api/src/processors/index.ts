@@ -6,11 +6,22 @@ import {Invoice} from "../invoice";
 export class Processors extends Invoice {
     @REST.post()
     @Authorization.protect()
-    async 'processors/:_bid/create'(@REST.schema() processor:Pick<IProcessor, "keys" | "name" | "gateway" | "email" >, ctx:ICTX){
-        let _id
-            = (await Mongo.$.processors.insertOne({
-            _bid : new ObjectId(ctx.getParams()._bid),
-            ...processor
+    async 'processors/:_bid/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" >, ctx:ICTX){
+        let _id = (await Mongo.$.processors.insertOne({
+            _bid    : new ObjectId(ctx.getParams()._bid),
+            name    : processor.name,
+            gateway : processor.gateway,
+            email   : processor.email,
+            keys    : {
+                production : {
+                    public : false,
+                    secret : false
+                },
+                development : {
+                    public : false,
+                    secret : false
+                }
+            }
         })).insertedId;
 
         return {_id}
@@ -34,12 +45,29 @@ export class Processors extends Invoice {
     }
     @REST.get()
     @Authorization.protect()
-    async 'processors/:_bid/update/:_pid'(@REST.schema() processor:Pick<IProcessor, "keys" | "name" | "gateway" | "email" >, ctx:ICTX){
+    async 'processors/:_bid/update/:_pid'(@REST.schema() processor:Pick<IProcessor,  "name" | "gateway" | "email" >, ctx:ICTX){
         return await Mongo.$.processors.updateOne({
             _bid : new ObjectId(ctx.getParams()._bid),
             _id  : new ObjectId(ctx.getParams()._pid)
         },{
-            $set : {}
+            $set : {
+                name    : processor.name,
+                gateway : processor.gateway,
+                email   : processor.email
+            }
+        })
+    }
+
+    @REST.get()
+    @Authorization.protect()
+    async 'processors/:_bid/update/:_pid/keys'(@REST.schema() processor:Pick<IProcessor,  "keys" >, ctx:ICTX){
+        return await Mongo.$.processors.updateOne({
+            _bid : new ObjectId(ctx.getParams()._bid),
+            _id  : new ObjectId(ctx.getParams()._pid)
+        },{
+            $set : {
+                keys : processor.keys,
+            }
         })
     }
 
