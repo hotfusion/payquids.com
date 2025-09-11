@@ -7,8 +7,22 @@ import {Customers} from "../customers";
 export class Invoice extends Customers {
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_bid/:_pid/:_cid/create'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
-        let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
+    async 'invoices/:_bid/create/:_pid/:_cid'(@REST.schema() invoice:Omit<IInvoice, '_id' | '_bid' | '_pid' | '_cid' | 'created'>, ctx:ICTX){
+        let _id = (await Mongo.$.invoices.insertOne({
+            _bid     : new ObjectId(ctx.getParams()._bid),
+            _pid     : new ObjectId(ctx.getParams()._pid),
+            _cid     : new ObjectId(ctx.getParams()._cid),
+            amount   : {
+                value    : invoice.amount,
+                currency : invoice.amount.currency || 'usd'
+            },
+            paid     : false,
+            due      : new Date().valueOf(),
+            created  : new Date().valueOf(),
+            type     : invoice.type,
+            items    : invoice.items || [],
+            policies : invoice.policies || []
+        })).insertedId;
 
         return { _id };
     }

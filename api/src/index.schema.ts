@@ -62,7 +62,7 @@ export interface ICustomer {
     email    : TString<{min:10,max:100}>;
     name    ?: TString<{min:10,max:100}>;
     address ?: TString<{min:10,max:100}>;
-    phone   ?: string;
+    phone   ?: TString<{min:10,max:100}>;
 }
 
 interface IMerchant {
