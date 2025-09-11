@@ -27,16 +27,21 @@ export default class API extends Branches {
     }
     @REST.get()
     async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
+
         let document
             = await this.getBranchDocument(branch);
 
         if(!document?.name)
             throw new Error("domain was not found");
 
+        if(!document?.processors?.length)
+            throw new Error("branch is not connected to the process gateway");
+
         let processor= await Mongo.$.processors.findOne<IProcessor>({
             _id : document.processors.find(x => x.default)._id
         })
 
+        console.log(processor)
         if(!processor)
             throw new Error("processor was not found");
 
@@ -48,6 +53,14 @@ export default class API extends Branches {
 
         this.tokens.push(token);
 
+        console.log({
+            token  : token,
+            domain : document.domain,
+            mode   : document.mode,
+            keys   : {
+                public : processor.keys[document.mode].public,
+            }
+        })
         return {
             token  : token,
             domain : document.domain,

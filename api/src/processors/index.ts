@@ -17,6 +17,15 @@ export class Processors extends Invoice {
     }
     @REST.get()
     @Authorization.protect()
+    async 'processors/:_bid/delete/:_pid'({}, ctx:ICTX){
+        //TODO: you cant delete processors that are part of branch that is live
+        return Mongo.$.processors.deleteOne({
+            _bid : new ObjectId(ctx.getParams()._bid),
+            _id  : new ObjectId(ctx.getParams()._pid)
+        })
+    }
+    @REST.get()
+    @Authorization.protect()
     async 'processors/:_bid/read/:_pid'({}, ctx:ICTX){
         return Mongo.$.processors.findOne({
             _bid : new ObjectId(ctx.getParams()._bid),
@@ -25,7 +34,7 @@ export class Processors extends Invoice {
     }
     @REST.get()
     @Authorization.protect()
-    async 'processors/:_bid/update/:_pid'({}, ctx:ICTX){
+    async 'processors/:_bid/update/:_pid'(@REST.schema() processor:Pick<IProcessor, "keys" | "name" | "gateway" | "email" >, ctx:ICTX){
         return await Mongo.$.processors.updateOne({
             _bid : new ObjectId(ctx.getParams()._bid),
             _id  : new ObjectId(ctx.getParams()._pid)
@@ -33,15 +42,7 @@ export class Processors extends Invoice {
             $set : {}
         })
     }
-    @REST.get()
-    @Authorization.protect()
-    async 'processors/:_bid/delete/:_pid'({}, ctx:ICTX){
-        //TODO: you cant delete processors that are part of branch that is live
-        return Mongo.$.processors.deleteOne({
-            _bid : new ObjectId(ctx.getParams()._bid),
-            _id  : new ObjectId(ctx.getParams()._pid)
-        })
-    }
+
     @REST.get()
     @Authorization.protect()
     async 'processors/:_bid/list'({}, ctx:ICTX){

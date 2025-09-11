@@ -27,6 +27,7 @@ export interface IProcessor {
     _uid    : string;
     name    : string;
     email   : string;
+    default : boolean
     gateway : 'stripe' | 'paypal'
     keys    : {
         production : {
@@ -43,7 +44,6 @@ export interface IPagination  {
     page : number;
     size : number;
 }
-export interface IBranchProcessorItem {_id:string, default:boolean}
 export interface IGatewayIntent {
     domain:string,
     amount:number,

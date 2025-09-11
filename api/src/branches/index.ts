@@ -1,5 +1,5 @@
 import {Authorization, ICTX, Mongo, ObjectId, REST} from "@hotfusion/ws";
-import {IBranch, IBranchProcessorItem, IPagination} from "../index.schema";
+import {IBranch, IPagination, IProcessor} from "../index.schema";
 import {Processors} from "../processors";
 
 export class Branches extends Processors {
@@ -34,30 +34,25 @@ export class Branches extends Processors {
 
     @REST.post()
     @Authorization.protect()
-    async 'branches/:_bid/processors/push'(@REST.schema() processor:IBranchProcessorItem,ctx:ICTX) {
+    async 'branches/:_bid/processors/:_pid/push'(@REST.schema() processor:Pick<IProcessor,"default">,ctx:ICTX) {
 
         let document = await Mongo.$.branches.findOne({
             _id: new ObjectId(ctx.getParams()._bid as string)
         });
-
-        let exists
-            = document.processors.find(x => x._id.toString() === processor._id)
+        let _pid = ctx.getParams()._pid,  processors = document.processors || [],exists = processors.length !== 0
 
         if(!exists) {
-            document.processors = document.processors.map((processor: any) => {
-                if(processor.default)
-                    processor.default = false;
-                return processor
+            processors.forEach((processor: any) => processor.default = false);
+            processors.push({
+                _id     : new ObjectId(_pid),
+                default : true
             });
-            document.processors.push({...processor,_id:new ObjectId(processor._id)});
         }
 
         return await Mongo.$.branches.updateOne({
             _id: new ObjectId(ctx.getParams()._bid as string)
         }, {
-            $set: {
-                processors: document.processors
-            }
+            $set: {processors}
         });
     }
 }
