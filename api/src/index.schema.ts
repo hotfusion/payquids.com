@@ -56,7 +56,10 @@ export interface IGatewayIntent {
 }
 
 
-
+export interface ICustomerProcessorProfile {
+    _pid : string;
+    id : string;
+}
 export interface ICustomer {
     _id      : string;
     _bid     : string;

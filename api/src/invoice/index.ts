@@ -7,7 +7,7 @@ import {Customers} from "../customers";
 export class Invoice extends Customers {
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_bid/create/:_pid/:_cid'(@REST.schema() invoice:Omit<IInvoice, '_id' | '_bid' | '_pid' | '_cid' | 'created'>, ctx:ICTX){
+    async ':_bid/invoices/create/:_pid/:_cid'(@REST.schema() invoice:Omit<IInvoice, '_id' | '_bid' | '_pid' | '_cid' | 'created'>, ctx:ICTX){
         let _id = (await Mongo.$.invoices.insertOne({
             _bid     : new ObjectId(ctx.getParams()._bid),
             _pid     : new ObjectId(ctx.getParams()._pid),
@@ -33,21 +33,21 @@ export class Invoice extends Customers {
      *
      * @param {number} invoice -
      */
-    async 'invoices/:_bid/update/:_iid'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
+    async ':_bid/invoices/:_iid/update'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
         let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_bid/delete/:_iid'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
+    async ':_bid/invoices/:_iid/delete'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
         let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_bid/read/:_iid'({},ctx:ICTX){
+    async ':_bid/invoices/:_iid/read'({},ctx:ICTX){
         let invoice = await Mongo.$.invoices.findOne({
             _id : new ObjectId(ctx.getParams()._id)
         });
@@ -56,12 +56,12 @@ export class Invoice extends Customers {
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_bid/list'({},ctx:ICTX){
+    async ':_bid/invoices/list'({},ctx:ICTX){
         return await Mongo.$.invoices.find({}).toArray();
     }
     @REST.post()
     @Authorization.protect()
-    async 'invoices/:_bid/html/:_id'({},ctx:ICTX){
+    async ':_bid/invoices/html/:_id'({},ctx:ICTX){
         console.log(ctx.getParams())
         let document = await Mongo.$.invoices.findOne({
             _id : new ObjectId(ctx.getParams()._id)

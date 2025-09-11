@@ -126,10 +126,14 @@ export default class API extends Branches {
 
         if(!profile) {
             profile = await stripe.customers.create({
-                email: intent.email,
-                name: intent.name,
-                phone: intent.phone
+                email : intent.email,
+                name  : intent.name,
+                phone : intent.phone
             });
+            await this[`${branch._id}/customers/:_cid/profiles/push`]({
+                _pid : processor._id,
+                id   : profile.id,
+            })
         }
 
         const {client_secret} = await stripe.paymentIntents.create({

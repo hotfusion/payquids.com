@@ -1,16 +1,16 @@
 import {Authorization, ICTX, Mongo, ObjectId, REST} from "@hotfusion/ws"
-import type {ICustomer} from "../index.schema";
+import type {ICustomer, ICustomerProcessorProfile} from "../index.schema";
 
 export class Customers {
     @REST.post()
     @Authorization.protect()
     async ':_bid/customers/create'(@REST.schema() customer:Pick<ICustomer, 'email' | 'name' | 'address' | 'phone'>, ctx:ICTX){
         let _id = (await Mongo.$.customers.insertOne({
-            _bid : new ObjectId(ctx.getParams()._bid),
-            email : customer.email,
-            name : customer.name,
-            address : customer.address ,
-            phone : customer.phone
+            _bid    : new ObjectId(ctx.getParams()._bid),
+            email   : customer.email,
+            name    : customer.name,
+            address : customer.address,
+            phone   : customer.phone
         })).insertedId;
         return { _id };
     }
@@ -61,11 +61,57 @@ export class Customers {
     }
     @REST.get()
     @Authorization.protect()
-    async ':_bid/customers/:_cid/profiles/push'(@REST.schema() profile:{}, ctx:ICTX){
+    async ':_bid/customers/:_cid/profiles/push'(@REST.schema() profile:ICustomerProcessorProfile, ctx:ICTX){
         let document =  await Mongo.$.customers.findOne({
             _id : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         })
-        document.profiles = document.profiles || [];
+        document.profiles
+            = document.profiles || [];
+
+        if(!document.profiles.find(x => x.id === profile.id))
+            document.profiles.push(profile);
+
+        (await Mongo.$.customers.updateOne({
+            _id : document._id
+        },{
+            $set: {
+                profiles : document.profiles
+            }
+        }));
+
+        return profile
+    }
+    @REST.get()
+    @Authorization.protect()
+    async ':_bid/customers/:_cid/profiles/list'(@REST.schema() profile:ICustomerProcessorProfile, ctx:ICTX){
+        let document =  await Mongo.$.customers.findOne({
+            _id : new ObjectId(ctx.getParams()._cid),
+            _bid : new ObjectId(ctx.getParams()._bid)
+        })
+        return {
+            profiles : document.profiles
+        }
+    }
+    @REST.get()
+    @Authorization.protect()
+    async ':_bid/customers/:_cid/profiles/remove'(@REST.schema() profile:ICustomerProcessorProfile, ctx:ICTX){
+        let document =  await Mongo.$.customers.findOne({
+            _id  : new ObjectId(ctx.getParams()._cid),
+            _bid : new ObjectId(ctx.getParams()._bid)
+        });
+
+        document.profiles
+            = (document.profiles || []).filter(x => x.id !== profile.id);
+
+        await Mongo.$.customers.updateOne({
+            _id : document._id
+        },{
+            $set: {
+                profiles : document.profiles
+            }
+        });
+
+        return profile
     }
 }
