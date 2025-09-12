@@ -4,7 +4,9 @@ interface IReceiptSettings {
 }
 export class Receipt extends Component<any,any>{
     constructor(settings: IReceiptSettings) {
-        super({},{});
+        super(settings,{
+            card:false
+        });
     }
     static frame : Frame
     async mount(frame: Frame): Promise<this> {
@@ -12,15 +14,15 @@ export class Receipt extends Component<any,any>{
         Receipt.frame = frame;
         return super.mount(frame);
     }
-    static mount(charge:any){
+    static mount(charge:any,card:any,customer:any){
         Receipt.frame .setHTML(`
             <div class="receipt-header">
               <div class="title">The payment successfully completed  </div>
               <div class="amount">$${charge.amount.toFixed(2)}</div>
               <div class="details">
-                 <span class="name">Vadim Korolov </span>
+                 <span class="name">${customer.name}</span>
                  <span class="digits">**** **** ****</span> 
-                 <span class="last-digits">4321</span>
+                 <span class="last-digits">${card.last4}</span>
               </div>
               
               <div class="invoice">

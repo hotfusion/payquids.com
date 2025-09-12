@@ -149,4 +149,14 @@ export type ICollections = {
     receipts    : IReceipt
     customers   : ICustomer
     invoices    : IInvoice
+    cards       : {
+        _id       : string
+        email     : string
+        last4     : string
+        name      : string
+        country   : string
+        brand     : string
+        exp_month : string
+        exp_year  : string
+    }[]
 }

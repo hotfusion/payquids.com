@@ -3,7 +3,7 @@ import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./
 import {Branches} from "./branches";
 import Stripe from "stripe";
 
-@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices'])
+@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
 @Authorization.provider('local')
 
 export default class API extends Branches {
@@ -73,13 +73,35 @@ export default class API extends Branches {
             charge.id
         );
 
+        let payment
+            = await stripe.paymentMethods.retrieve(intent.payment_method as string);
 
+        let card:any;
         if(intent.status === 'succeeded'){
             let profile:any
                 = await stripe.customers.retrieve(intent.customer as string)
 
             let customer = await Mongo.$.customers.findOne({
                 email : profile.email
+            });
+
+            if(payment?.card?.last4)
+                await Mongo.$.cards.updateOne({
+                    _cid  : customer._id,
+                    last4 : payment.card.last4
+               }, {
+                    $set: {
+                        country   : payment.card.country,
+                        brand     : payment.card.brand,
+                        exp_month : payment.card.exp_month,
+                        exp_year  : payment.card.exp_year
+                    }
+               }, {upsert : true});
+
+
+            card = await Mongo.$.cards.findOne({
+                _cid  : customer._id,
+                last4 : payment.card.last4
             });
 
             await Mongo.$.receipts.insertOne({
@@ -89,14 +111,16 @@ export default class API extends Branches {
                 domain   : charge.domain,
                 amount   : intent.amount_received/100,
                 created  : new Date().valueOf(),
+                card     : card._id,
                 profile  : {
                     id : profile.id
                 }
             })
         }
         return {
+            card      : card || false,
             domain    : charge.domain,
-            completed : intent.status === 'succeeded'
+            completed : intent.status === 'succeeded',
         }
     }
     @REST.get()

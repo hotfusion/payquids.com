@@ -119,11 +119,10 @@ class StripeProcessor extends EventEmitter implements Processor  {
     async charge(){
         let { error,paymentIntent  } = await this.stripe.confirmPayment({
             elements : this.elements,
-            redirect : 'if_required',
-            expand: ['payment_method']
+            redirect : 'if_required'
         });
         this.emit('charge', {error,intent:paymentIntent});
-        return { amount:paymentIntent.amount/100, error }
+        return { amount:paymentIntent.amount/100, error,intent:paymentIntent }
     }
 }
 export class ProcessorGateway extends Component<any,any>{
