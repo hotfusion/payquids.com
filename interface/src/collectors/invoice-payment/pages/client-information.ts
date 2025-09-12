@@ -27,7 +27,7 @@ export class ClientInformation extends Component<any,any>{
             })
         }
 
-        frame.setStyle({gap:'10px', padding:'20px'});
+        frame.setStyle({gap:'10px'});
         let {theme,client} = this.getSettings()
         this.form = {
             invoice : new Frame('invoice-input', new Input({

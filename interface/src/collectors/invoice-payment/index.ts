@@ -4,6 +4,7 @@ import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
 import {Connector} from "../../../../../workspace/src/_.manager/src/_.utils/client-connector"
+import "../../index.less"
 interface IInterfaceSettings {
     theme     : string;
     domain    : string;

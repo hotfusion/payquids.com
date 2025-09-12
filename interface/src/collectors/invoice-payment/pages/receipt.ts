@@ -1,4 +1,5 @@
 import {Component, Frame, Input} from "@hotfusion/ui";
+import * as QRCode from  "qrcode"
 interface IReceiptSettings {
     theme: string;
 }
@@ -32,8 +33,31 @@ export class Receipt extends Component<any,any>{
                  </span>
                  <span class="material-symbols-outlined icon">order_approve</span> #A01-0000000
               </div>
+              
+              <div class="qrcode-container">
+                 <div>Scan this code to download the paid invoice to your mobile device</div>
+                 <canvas class="qrcode" style="align-self: center; margin-top: 20px;"></canvas>
+              </div>
             </div>
         `)
-        document.body.querySelector('.receipt-header').setAttribute('mounted','true');
+
+
+        setTimeout(() => {
+            QRCode.toCanvas(Receipt.frame.getTag().querySelector('.qrcode'), 'sample text', {
+                errorCorrectionLevel: 'H',
+                type: 'image/jpeg',
+                quality: 1,
+                margin: 1,
+                width : 150,
+                scale  : 10,
+                color: {
+                    dark  : "#26292b",
+                    light : "#bfc9cc"
+                }
+            })
+        })
+        document.body
+            .querySelector('.receipt-header')
+            .setAttribute('mounted','true');
     }
 }
