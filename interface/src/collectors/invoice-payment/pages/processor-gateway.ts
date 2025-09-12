@@ -106,23 +106,16 @@ class StripeProcessor extends EventEmitter implements Processor  {
         }).on('blur',() => {
             this.isFocus = false;
         });
-
-
-        dom.style.padding = '20px';
-        dom.style.paddingTop = '40px';
         this.card.mount(dom);
-
         (<any>dom).firstChild.style.width = '100%';
 
         return this;
     }
     async charge(){
-        console.log('charge')
         let { error,paymentIntent  } = await this.stripe.confirmPayment({
             elements : this.elements,
             redirect : 'if_required'
         });
-        console.log('paymentIntent:',paymentIntent)
         this.emit('charge', {error,intent:paymentIntent});
         return { amount:paymentIntent.amount/100, error,intent:paymentIntent }
     }
@@ -134,7 +127,7 @@ export class ProcessorGateway extends Component<any,any>{
     }
 
     async init(public_key:string,client_secret:string) {
-        this.getFrame().setStyle({opacity:0})
+        this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
             return this.processor = (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
                 resolve(true)

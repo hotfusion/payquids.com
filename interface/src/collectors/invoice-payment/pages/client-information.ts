@@ -40,7 +40,7 @@ export class ClientInformation extends Component<any,any>{
                     clickable : false
                 }]
             }).on('input',validate)
-              .on('mounted', validate)).setStyle({marginTop: '10px'}),
+              .on('mounted', validate)),
             amount : new Frame('amount-input', new Input({
                 theme,
                 placeholder : '$0.00',

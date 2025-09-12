@@ -52,7 +52,7 @@ export class Receipt extends Component<any,any>{
                 scale  : 10,
                 color: {
                     dark  : "#26292b",
-                    light : "#bfc9cc"
+                    light : "#eaebec"
                 }
             })
         })
