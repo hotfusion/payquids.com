@@ -87,6 +87,10 @@ interface IServiceItem {
     rate: number;
 }
 
+export interface IDimaInterface{
+    test : string;
+    name : string;
+}
 interface IProductItem {
     product: string;
     price: number;

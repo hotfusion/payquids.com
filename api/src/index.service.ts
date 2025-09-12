@@ -10,6 +10,11 @@ export default class API extends Branches {
     private getBranchDocument(query:{domain:string}){
         return Mongo.$.branches.findOne<IBranch>(query)
     }
+
+    @REST.get()
+    'ping'(){
+        return 'pong'
+    }
     private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
         let branch
             = await this.getBranchDocument({domain})
