@@ -8,7 +8,7 @@ import { createSSRApp } from 'vue';
 import juice from 'juice';
 //@ts-ignore
 import vue from '@vitejs/plugin-vue';
-interface Customer { email: string; name: string; address: string; }
+interface Customer { email: string; name: string; address: string;phone: string }
 interface Merchant { name: string; address: string; phone: string; email: string; }
 interface ServiceItem { service: string; description: string; hours: number; rate: number; }
 interface ProductItem { product: string; price: number; quantity: number; }

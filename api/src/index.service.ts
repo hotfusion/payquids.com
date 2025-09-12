@@ -5,6 +5,7 @@ import Stripe from "stripe";
 
 @Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices'])
 @Authorization.provider('local')
+
 export default class API extends Branches {
     private getBranchDocument(query:{domain:string}){
         return Mongo.$.branches.findOne<IBranch>(query)
@@ -72,26 +73,24 @@ export default class API extends Branches {
             charge.id
         );
 
+
         if(intent.status === 'succeeded'){
+            let profile:any
+                = await stripe.customers.retrieve(intent.customer as string)
+
+            let customer = await Mongo.$.customers.findOne({
+                email : profile.email
+            });
+
             await Mongo.$.receipts.insertOne({
+                _bid     : branch._id,
+                _pid     : processor._id,
+                _cid     : customer._id,
                 domain   : charge.domain,
                 amount   : intent.amount_received/100,
                 created  : new Date().valueOf(),
-                notified : false,
-                receipt  : {
-                    _id : undefined
-                },
-                processor : {
-                    _id : processor._id
-                },
-                branch : {
-                    _id : branch._id,
-                },
-                metadata : {
-                    customer : {
-                        id : intent.customer,
-                        ip : intent.metadata.customer_ip,
-                    }
+                profile  : {
+                    id : profile.id
                 }
             })
         }
@@ -112,17 +111,22 @@ export default class API extends Branches {
             email : intent.email
         });
 
+        if(!customer) {
+           await Mongo.$.customers.insertOne({
+                _bid     : branch._id,
+                email    : intent.email,
+                name     : intent.name,
+                phone    : intent.phone,
+                profiles : []
+            });
 
-        if(!customer)
-            await this[`customers/${branch._id}/create`]({
-                email   : intent.email,
-                name    : intent.name,
-                phone   : intent.phone
-            })
+            customer = await Mongo.$.customers.findOne({
+                email : intent.email
+            });
+        }
 
-        let profile= (await stripe.customers.list({
-            email : intent.email, limit: 1
-        }))?.data?.[0];
+        let profile
+            = (await stripe.customers.list({email : intent.email, limit: 1}))?.data?.[0];
 
         if(!profile) {
             profile = await stripe.customers.create({
@@ -130,9 +134,20 @@ export default class API extends Branches {
                 name  : intent.name,
                 phone : intent.phone
             });
-            await this[`${branch._id}/customers/:_cid/profiles/push`]({
-                _pid : processor._id,
+        }
+
+        if(!customer.profiles.find(x => x.id === profile.id)) {
+            customer.profiles.push({
                 id   : profile.id,
+                _pid : processor._id
+            })
+
+            await Mongo.$.customers.updateOne({
+                email : intent.email
+            },{
+                $set : {
+                    profiles : customer.profiles
+                }
             })
         }
 
@@ -150,8 +165,6 @@ export default class API extends Branches {
         });
 
         return {client_secret}
-
-
     }
     @Controller.on("mounted")
     async mounted(){
