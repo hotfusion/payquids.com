@@ -1,5 +1,4 @@
 import type { Preview } from '@storybook/vue3-vite'
-import { addons } from '@storybook/manager-api';
 import { withThemeByClassName } from '@storybook/addon-themes';
 const preview: Preview = {
   parameters: {

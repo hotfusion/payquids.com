@@ -164,7 +164,6 @@ export class InvoiceModule {
                 resolve(__dirname, `./templates/${template}.vue`)
             )).default;
 
-            console.log(Component)
             // 2. Prepare data for invoice
             const date = new Date().toLocaleDateString('en-US', {
                 year: 'numeric',

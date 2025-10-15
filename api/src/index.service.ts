@@ -3,19 +3,23 @@ import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./
 import {Branches} from "./branches";
 import Stripe from "stripe";
 
-@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
-@Authorization.provider('local')
-
-export default class API extends Branches {
-    private getBranchDocument(query:{domain:string}){
-        return Mongo.$.branches.findOne<IBranch>(query)
+//@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
+@Authorization.provider('local',{
+    adapter : {
+        uri : 'mongodb://localhost:27017/payquids'
     }
+})
+
+export default class API /*extends Branches */{
+    /*private getBranchDocument(query:{domain:string}){
+        return Mongo.$.branches.findOne<IBranch>(query)
+    }*/
 
     @REST.get()
     'ping'(){
         return 'pong'
     }
-    private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
+    /*private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
         let branch
             = await this.getBranchDocument({domain})
 
@@ -198,5 +202,5 @@ export default class API extends Branches {
     @Controller.on("mounted")
     async mounted(){
 
-    }
+    }*/
 }
