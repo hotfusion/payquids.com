@@ -1,25 +1,27 @@
-import {REST, Controller, Authorization, Mongo, ICTX, ObjectId} from "@hotfusion/ws";
+import {REST, Controller, Authorization} from "@hotfusion/ws";
 import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
 import Stripe from "stripe";
+import { URIParser } from "@hotfusion/ws/utils/uri-parser";
+import { MongoClient, Db, Collection, ObjectId } from "mongodb";
 
 //@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
-@Authorization.provider('local',{
+/*@Authorization.provider('local',{
     adapter : {
         uri : 'mongodb://localhost:27017/payquids'
     }
-})
+})*/
 
-export default class API /*extends Branches */{
-    /*private getBranchDocument(query:{domain:string}){
-        return Mongo.$.branches.findOne<IBranch>(query)
-    }*/
+export default class API extends Branches{
+    private async getBranchDocument(query:{domain:string}){
+        return this.source.branches.findOne(query) as IBranch | null
+    }
 
     @REST.get()
     'ping'(){
         return 'pong'
     }
-    /*private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
+    private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
         let branch
             = await this.getBranchDocument({domain})
 
@@ -27,9 +29,11 @@ export default class API /*extends Branches */{
             throw new Error("domain was not found");
 
 
-        let processor= await Mongo.$.processors.findOne<IProcessor>({
+        //Untyped function calls may not accept type arguments
+        let processor = await this.source.processors.findOne({
             _id : branch.processors.find(x => x.default)._id
-        })
+        }) as IProcessor | null
+
         if(!processor)
             throw new Error("processor was not found");
 
@@ -47,9 +51,9 @@ export default class API /*extends Branches */{
         if(!document?.processors?.length)
             throw new Error("branch is not connected to the process gateway");
 
-        let processor= await Mongo.$.processors.findOne<IProcessor>({
+        let processor= await this.source.processors.findOne({
             _id : document.processors.find(x => x.default)._id
-        })
+        }) as IProcessor | null
 
         if(!processor)
             throw new Error("processor was not found");
@@ -90,12 +94,12 @@ export default class API /*extends Branches */{
             let profile:any
                 = await stripe.customers.retrieve(intent.customer as string)
 
-            let customer = await Mongo.$.customers.findOne({
+            let customer = await this.source.customers.findOne({
                 email : profile.email
             });
 
             if(payment?.card?.last4)
-                await Mongo.$.cards.updateOne({
+                await this.source.cards.updateOne({
                     _cid  : customer._id,
                     last4 : payment.card.last4
                }, {
@@ -108,12 +112,12 @@ export default class API /*extends Branches */{
                }, {upsert : true});
 
 
-            card = await Mongo.$.cards.findOne({
+            card = await this.source.cards.findOne({
                 _cid  : customer._id,
                 last4 : payment.card.last4
             });
 
-            await Mongo.$.receipts.insertOne({
+            await this.source.receipts.insertOne({
                 _bid     : branch._id,
                 _pid     : processor._id,
                 _cid     : customer._id,
@@ -140,12 +144,12 @@ export default class API /*extends Branches */{
         let stripe
             = new Stripe(processor.keys[branch.mode].secret);
 
-        let customer = await Mongo.$.customers.findOne({
+        let customer = this.source.customers.findOne({
             email : intent.email
         });
 
         if(!customer) {
-           await Mongo.$.customers.insertOne({
+            await this.source.customers.insertOne({
                 _bid     : branch._id,
                 email    : intent.email,
                 name     : intent.name,
@@ -153,7 +157,7 @@ export default class API /*extends Branches */{
                 profiles : []
             });
 
-            customer = await Mongo.$.customers.findOne({
+            customer = await this.source.customers.findOne({
                 email : intent.email
             });
         }
@@ -175,7 +179,7 @@ export default class API /*extends Branches */{
                 _pid : processor._id
             })
 
-            await Mongo.$.customers.updateOne({
+            await this.source.customers.updateOne({
                 email : intent.email
             },{
                 $set : {
@@ -199,8 +203,6 @@ export default class API /*extends Branches */{
 
         return {client_secret}
     }
-    @Controller.on("mounted")
-    async mounted(){
 
-    }*/
+
 }

@@ -1,11 +1,53 @@
-import {Authorization, ICTX, Mongo, ObjectId, REST} from "@hotfusion/ws"
+import {Authorization, Controller, REST} from "@hotfusion/ws"
+import {URIParser} from "@hotfusion/ws/utils/uri-parser"
+import {ObjectId} from "mongodb";
 import type {ICustomer, ICustomerProcessorProfile} from "../index.schema";
+import {MongoClient} from "mongodb";
+interface ICTX {
+    [key: string]: any
+}
+export class DB {
+    protected source:{[key:string]: any} = {};
+    @Controller.on("mounted")
+    async mounted(){
+        let uri = 'mongodb://localhost:27017'
+        //this.dbName = URIParser(uri).database;
+        let connection  = new MongoClient(uri);
+        let collections = [{
+            name : 'customers'
+        }, {
+            name : 'receipts'
+        }, {
+            name : 'processors'
+        }]
+        try {
+            await connection.connect();
+            let source = connection.db(URIParser(uri).database);
 
-export class Customers {
+            for (const name of collections) {
+                const exists = await source.listCollections({ name: String(name) }).hasNext();
+                if (!exists) {
+                    await source.createCollection(String(name));
+                    console.log(`📂 Created collection: ${String(name)}`);
+                }
+                //Type { name: string; } cannot be used as an index type.
+                this.source[String(name)] = source.collection(String(name));
+            }
+
+            return this;
+        } catch (err) {
+            console.error('❌ MongoDB connection failed:', err);
+            throw err;
+        }
+    }
+}
+
+
+export class Customers extends  DB {
     @REST.post()
     @Authorization.protect()
     async ':_bid/customers/create'(@REST.schema() customer:Pick<ICustomer, 'email' | 'name' | 'address' | 'phone'>, ctx:ICTX){
-        let _id = (await Mongo.$.customers.insertOne({
+        let _id = (await this.source.customers.insertOne({
             _bid    : new ObjectId(ctx.getParams()._bid),
             email   : customer.email,
             name    : customer.name,
@@ -17,7 +59,7 @@ export class Customers {
     @REST.get()
     @Authorization.protect()
     async ':_bid/customers/list'({}, ctx:ICTX){
-        return Mongo.$.customers.find({
+        return this.source.customers.find({
             _bid : new ObjectId(ctx.getParams()._bid)
         }).toArray();
     }
@@ -25,12 +67,12 @@ export class Customers {
     @REST.post()
     @Authorization.protect()
     async ':_bid/customers/:_cid/update'(@REST.schema() customer:Pick<ICustomer, 'email' | 'name' | 'address' | 'phone'>, ctx:ICTX){
-        let document = await Mongo.$.customers.findOne({
+        let document = await this.source.customers.findOne({
             _id : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         })
 
-        let _id = (await Mongo.$.customers.updateOne({
+        let _id = (await this.source.customers.updateOne({
             _id : document._id
         },{
             $set: {
@@ -46,7 +88,7 @@ export class Customers {
     @REST.post()
     @Authorization.protect()
     async ':_bid/customers/:_cid/delete'({}, ctx:ICTX){
-        return Mongo.$.customers.deleteOne({
+        return this.source.customers.deleteOne({
             _id : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         })
@@ -54,7 +96,7 @@ export class Customers {
     @REST.get()
     @Authorization.protect()
     async ':_bid/customers/:_cid/read'({}, ctx:ICTX){
-        return Mongo.$.customers.findOne({
+        return this.source.customers.findOne({
             _id : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         })
@@ -62,7 +104,7 @@ export class Customers {
     @REST.get()
     @Authorization.protect()
     async ':_bid/customers/:_cid/profiles/push'(@REST.schema() profile:ICustomerProcessorProfile, ctx:ICTX){
-        let document =  await Mongo.$.customers.findOne({
+        let document =  await this.source.customers.findOne({
             _id : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         })
@@ -72,7 +114,7 @@ export class Customers {
         if(!document.profiles.find(x => x.id === profile.id))
             document.profiles.push(profile);
 
-        (await Mongo.$.customers.updateOne({
+        (await this.source.customers.updateOne({
             _id : document._id
         },{
             $set: {
@@ -85,7 +127,7 @@ export class Customers {
     @REST.get()
     @Authorization.protect()
     async ':_bid/customers/:_cid/profiles/list'(@REST.schema() profile:ICustomerProcessorProfile, ctx:ICTX){
-        let document =  await Mongo.$.customers.findOne({
+        let document =  await this.source.customers.findOne({
             _id : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         })
@@ -96,7 +138,7 @@ export class Customers {
     @REST.get()
     @Authorization.protect()
     async ':_bid/customers/:_cid/profiles/remove'(@REST.schema() profile:ICustomerProcessorProfile, ctx:ICTX){
-        let document =  await Mongo.$.customers.findOne({
+        let document =  await this.source.customers.findOne({
             _id  : new ObjectId(ctx.getParams()._cid),
             _bid : new ObjectId(ctx.getParams()._bid)
         });
@@ -104,7 +146,7 @@ export class Customers {
         document.profiles
             = (document.profiles || []).filter(x => x.id !== profile.id);
 
-        await Mongo.$.customers.updateOne({
+        await this.source.customers.updateOne({
             _id : document._id
         },{
             $set: {

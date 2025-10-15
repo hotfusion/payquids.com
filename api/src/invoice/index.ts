@@ -1,14 +1,18 @@
 
 import {InvoiceModule} from "./module";
-import {Authorization, ICTX, Mongo, ObjectId, REST} from "@hotfusion/ws";
+import {Authorization, REST} from "@hotfusion/ws";
+import { MongoClient, Db, Collection, ObjectId } from "mongodb"
 import {IInvoice} from "../index.schema";
 import {Customers} from "../customers";
 import {HtmlToPdf} from "../_.components/HtmltoPdf";
 
+interface ICTX {
+    [key: string]: any;
+}
 
 class InvoiceUtils {
-    static async PDF(_iid:string): Promise<any> {
-        let html = await InvoiceUtils.HTML(_iid);
+    static async PDF(_iid:string,Mongo:any): Promise<any> {
+        let html = await InvoiceUtils.HTML(_iid,Mongo);
         let converter
             = new HtmlToPdf();
 
@@ -18,7 +22,7 @@ class InvoiceUtils {
         await converter.close();
         return buffer.toString("base64")
     }
-    static async HTML(_iid:string){
+    static async HTML(_iid:string,Mongo:any){
         let document = await Mongo.$.invoices.findOne({
             _id : new ObjectId(_iid)
         });
@@ -56,9 +60,9 @@ class InvoiceUtils {
 }
 export class Invoice extends Customers {
     @REST.post()
-    @Authorization.protect()
+
     async ':_bid/invoices/create/:_pid/:_cid'(@REST.schema() invoice:Omit<IInvoice, '_id' | '_bid' | '_pid' | '_cid' | 'created'>, ctx:ICTX){
-        let _id = (await Mongo.$.invoices.insertOne({
+        let _id = (await this.source.invoices.insertOne({
             _bid     : new ObjectId(ctx.getParams()._bid),
             _pid     : new ObjectId(ctx.getParams()._pid),
             _cid     : new ObjectId(ctx.getParams()._cid),
@@ -77,47 +81,42 @@ export class Invoice extends Customers {
         return { _id };
     }
     @REST.post()
-    @Authorization.protect()
+
     /**
      * Update invoice by providing invoice id (_id) inside the path
      *
      * @param {number} invoice -
      */
     async ':_bid/invoices/:_iid/update'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
-        let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
+        let _id = (await this.source.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
     @REST.post()
-    @Authorization.protect()
     async ':_bid/invoices/:_iid/delete'(@REST.schema() invoice:Omit<IInvoice, '_id' | 'created'>, ctx:ICTX){
-        let _id = (await Mongo.$.invoices.insertOne(invoice)).insertedId;
+        let _id = (await this.source.invoices.insertOne(invoice)).insertedId;
 
         return { _id };
     }
     @REST.post()
-    @Authorization.protect()
     async ':_bid/invoices/:_iid/read'({},ctx:ICTX){
-        let invoice = await Mongo.$.invoices.findOne({
+        let invoice = await this.source.invoices.findOne({
             _id : new ObjectId(ctx.getParams()._id as string)
         });
         return invoice;
     }
     @REST.post()
-    @Authorization.protect()
     async ':_bid/invoices/list'({},ctx:ICTX){
-        return await Mongo.$.invoices.find({}).toArray();
+        return await this.source.invoices.find({}).toArray();
     }
     @REST.post()
-    @Authorization.protect()
     async ':_bid/invoices/:_iid/format/pdf'({},ctx:ICTX){
         ctx.setHeader('output-type', 'application/pdf');
-        return await InvoiceUtils.PDF(ctx.getParams()._iid);
+        return await InvoiceUtils.PDF(ctx.getParams()._iid,this.source);
     }
     @REST.post()
-    @Authorization.protect()
     async ':_bid/invoices/:_iid/format/html'({},ctx:ICTX){
         ctx.setHeader('output-type', 'text/html');
-        return await InvoiceUtils.HTML(ctx.getParams()._iid);
+        return await InvoiceUtils.HTML(ctx.getParams()._iid,this.source);
     }
 }
