@@ -1,6 +1,6 @@
 import {Interface} from "./index";
 import {Frame} from "@hotfusion/ui";
-import {Connector} from "../../../../../workspace/src/_.manager/src/_.utils/client-connector"
+import {Connector} from '../../../../api/node_modules/@hotfusion/ws/client/index.esm.js';
 import { defineComponent } from 'vue';
 export default defineComponent({
     props : {

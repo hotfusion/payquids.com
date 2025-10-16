@@ -3,7 +3,7 @@ import {Button, Component, Frame, Input, Navigator, Observable} from "@hotfusion
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
-import {Connector} from "../../../../../workspace/src/_.manager/src/_.utils/client-connector"
+import {Connector} from '../../../../api/node_modules/@hotfusion/ws/client/index.esm.js';
 
 interface IInterfaceSettings {
     theme     : string;
