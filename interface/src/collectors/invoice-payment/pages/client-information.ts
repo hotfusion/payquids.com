@@ -8,6 +8,7 @@ export class ClientInformation extends Component<any,any>{
             theme   : 'default',
             client  : false
         });
+
         this.on('settings', this.render.bind(this))
     }
 

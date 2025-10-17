@@ -22,10 +22,10 @@ export default defineComponent({
       }
     },
     async mounted() {
-
+        document.body.setAttribute('theme', 'dark');
         this.connector  = await Connector.connect(this.uri);
         this._interface = new Interface({
-            theme     : this.theme,
+            theme     : "dark",
             connector : this.connector,
             domain    : "digitaladsexp.com",
             client : {

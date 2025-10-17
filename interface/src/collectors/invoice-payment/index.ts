@@ -1,5 +1,5 @@
 import "../../_.style/index.less"
-import {Button, Component, Frame, Input, Navigator, Observable} from "@hotfusion/ui";
+import {Button, Component, Frame, Navigator} from "@hotfusion/ui";
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
@@ -70,7 +70,7 @@ export class Interface extends Component<any,any>{
                 theme    : 'dark',
                 disabled : true,
                 icon     : {
-                    code : 'keyboard_double_arrow_right'
+                    class : 'ri-arrow-drop-right-line'
                 }
             },{
                 id       : 'back',
@@ -85,7 +85,7 @@ export class Interface extends Component<any,any>{
                 title     : 'Invoice',
                 align     : 'center',
                 icon : {
-                  code : 'keyboard_double_arrow_right'
+                  class : 'ri-arrow-drop-right-line'
                 },
                 component : () => new ClientInformation(this.getSettings() as any ).on("change", ({complete,client}) => {
                     let continueButtonFrame:Frame
@@ -104,7 +104,7 @@ export class Interface extends Component<any,any>{
                 title     : 'Payment',
                 disabled  : true,
                 icon : {
-                    code : 'keyboard_double_arrow_right'
+                    class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
                 component : () =>  new ProcessorGateway(this.getSettings() as any ).on('mounted', async (com) => {
@@ -157,7 +157,7 @@ export class Interface extends Component<any,any>{
                 title     : 'Receipt',
                 disabled  : true,
                 icon : {
-                    code : 'keyboard_double_arrow_right'
+                    class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
                 component : () => new Receipt(this.getSettings() as any).on('mounted',(component) => {
