@@ -12,9 +12,15 @@ import { MongoClient, Db, Collection, ObjectId } from "mongodb";
     }
 })*/
 
+
 export default class API extends Branches{
     private async getBranchDocument(query:{domain:string}){
-        return this.source.branches.findOne(query) as IBranch | null
+        let branch     = await this.source.branches.findOne(query) as IBranch | null;
+        let processors = await this.source.processors.find({
+            _bid : branch._id
+        }).toArray() as IProcessor[];
+        branch.processors = processors;
+        return branch
     }
 
     @REST.get()
@@ -41,7 +47,6 @@ export default class API extends Branches{
     }
     @REST.get()
     async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
-
         let document
             = await this.getBranchDocument(branch);
 
@@ -49,10 +54,13 @@ export default class API extends Branches{
             throw new Error("domain was not found");
 
         if(!document?.processors?.length)
-            throw new Error("branch is not connected to the process gateway");
+            throw new Error("There’s no default gateway provider configured for this branch.");
 
+        let def = document.processors.find(x => x.default) || document.processors[0];
+
+        console.log(def)
         let processor= await this.source.processors.findOne({
-            _id : document.processors.find(x => x.default)._id
+            _id : def._id
         }) as IProcessor | null
 
         if(!processor)
@@ -203,6 +211,4 @@ export default class API extends Branches{
 
         return {client_secret}
     }
-
-
 }

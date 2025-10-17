@@ -22,14 +22,12 @@ export default defineComponent({
       }
     },
     async mounted() {
-        // set global theme
-        this.setBodyTheme('dark');
 
-        this.connector = await Connector.connect(this.uri);
+        this.connector  = await Connector.connect(this.uri);
         this._interface = new Interface({
             theme     : this.theme,
             connector : this.connector,
-            domain    : "businessmediagroup.us",
+            domain    : "digitaladsexp.com",
             client : {
                 invoice : 'A10-000001',
                 amount  : 20,

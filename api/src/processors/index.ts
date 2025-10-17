@@ -9,7 +9,7 @@ interface ICTX {
 export class Processors extends Invoice {
     @REST.post()
     @Authorization.protect()
-    async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" >, ctx:ICTX){
+    async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys">, ctx:ICTX){
         let _id = (await this.source.processors.insertOne({
             _bid    : new ObjectId(ctx.getParams()._bid),
             name    : processor.name,
@@ -17,12 +17,12 @@ export class Processors extends Invoice {
             email   : processor.email,
             keys    : {
                 production : {
-                    public : false,
-                    secret : false
+                    public : processor?.keys?.production?.public || false,
+                    secret : processor?.keys?.production?.secret || false
                 },
                 development : {
-                    public : false,
-                    secret : false
+                    public  : processor?.keys?.development?.public || false,
+                    secret  : processor?.keys?.development?.secret || false
                 }
             }
         })).insertedId;

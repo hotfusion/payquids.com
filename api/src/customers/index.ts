@@ -19,19 +19,21 @@ export class DB {
             name : 'receipts'
         }, {
             name : 'processors'
+        }, {
+            name : 'branches'
         }]
         try {
             await connection.connect();
             let source = connection.db(URIParser(uri).database);
 
-            for (const name of collections) {
-                const exists = await source.listCollections({ name: String(name) }).hasNext();
+            for (const {name} of collections) {
+                const exists = await source.listCollections({ name }).hasNext();
                 if (!exists) {
-                    await source.createCollection(String(name));
-                    console.log(`📂 Created collection: ${String(name)}`);
+                    await source.createCollection(name);
+                    console.log(`📂 Created collection: ${name}`);
                 }
                 //Type { name: string; } cannot be used as an index type.
-                this.source[String(name)] = source.collection(String(name));
+                this.source[name] = source.collection(name);
             }
 
             return this;

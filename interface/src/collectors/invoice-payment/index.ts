@@ -28,10 +28,7 @@ export class Interface extends Component<any,any>{
             client : false
         });
     }
-
-
     async mount(frame: Frame): Promise<this> {
-
         let branch = (await Connector.getRoutes().branch.metadata({
             domain : this.getSettings().domain
         })).output;

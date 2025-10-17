@@ -18,7 +18,7 @@ export class Branches extends Processors {
     }
     @REST.get()
     @Authorization.protect()
-    async 'branches/list'(@REST.schema() pagination:IPagination,ctx:ICTX) {
+    async 'branches/list'(@REST.schema() pagination:IPagination,ctx:ICTX):Promise<any[]> {
         return  await this.source.branches.find({}).toArray()
     }
     @REST.post()
@@ -36,7 +36,7 @@ export class Branches extends Processors {
         });
     }
 
-    @REST.post()
+   /* @REST.post()
     @Authorization.protect()
     async 'branches/:_bid/processors/:_pid/push'(@REST.schema() processor:Pick<IProcessor,"default">,ctx:ICTX) {
 
@@ -58,5 +58,5 @@ export class Branches extends Processors {
         }, {
             $set: {processors}
         });
-    }
+    }*/
 }

@@ -54,8 +54,6 @@ export interface IGatewayIntent {
     scope: "invoice" | "products" | "donation",
     mode:"production" | "development"
 }
-
-
 export interface ICustomerProcessorProfile {
     _pid : string;
     id : string;
@@ -72,21 +70,18 @@ export interface ICustomer {
         _pid : string
     }[];
 }
-
 interface IMerchant {
     name: string;
     address: string;
     phone: string;
     email: string;
 }
-
 interface IServiceItem {
     service: string;
     description: string;
     hours: number;
     rate: number;
 }
-
 export interface IDimaInterface{
     test : string;
     name : string;
@@ -96,13 +91,11 @@ interface IProductItem {
     price: number;
     quantity: number;
 }
-
 interface ICollectorItem {
     service: string;
     description: string;
     amount: number;
 }
-
 interface IPolicy {
     policy: string;
     value: string;
