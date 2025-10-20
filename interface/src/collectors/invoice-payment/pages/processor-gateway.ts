@@ -36,15 +36,12 @@ class StripeProcessor extends EventEmitter implements Processor  {
         this.elements = this.stripe.elements({
             // for subscription/recurring the clientSecret is undefined
             clientSecret : this.client_secret,
-            fonts: [
-                {
-                    cssSrc: 'https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;700;900'
-                }
-            ],
+            fonts : [{
+                cssSrc: 'https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;700;900'
+            }],
             appearance:{
                 theme: 'stripe',
                 rules : {
-
                     '.Input': {
                         borderRadius    : '3px',
                         height          : '30px',
@@ -96,6 +93,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
         }).on('ready',() => {
             this.ready
                 = true;
+
             setTimeout(() => {
                 this.emit('mounted',this)
             },700)
@@ -106,6 +104,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
         }).on('blur',() => {
             this.isFocus = false;
         });
+
         this.card.mount(dom);
         (<any>dom).firstChild.style.width = '100%';
 
@@ -125,7 +124,6 @@ export class ProcessorGateway extends Component<any,any>{
     constructor(settings: IPaymentGatewaySettings) {
         super({},{});
     }
-
     async init(public_key:string,client_secret:string) {
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
@@ -139,7 +137,10 @@ export class ProcessorGateway extends Component<any,any>{
         return this.processor.charge()
     }
     async mount(frame: Frame): Promise<this> {
-        this.emit('mounted',this)
+
+        setTimeout(() => {
+            this.emit('mounted',this)
+        },700)
         return super.mount(frame);
     }
 }

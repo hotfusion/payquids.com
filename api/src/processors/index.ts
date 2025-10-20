@@ -73,9 +73,13 @@ export class Processors extends Invoice {
             }
         })
     }
-    @REST.get()
+    @REST.get(/*{
+        type : Array
+    }*/)
     @Authorization.protect()
     async ':_bid/processors/list'({}, ctx:ICTX){
         return await this.source.processors.find({}).toArray()
     }
+
+
 }

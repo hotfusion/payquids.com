@@ -108,6 +108,7 @@ export class Interface extends Component<any,any>{
                 },
                 align     : 'center',
                 component : () =>  new ProcessorGateway(this.getSettings() as any ).on('mounted', async (com) => {
+                    console.log('m')
                     let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,
                         "amount"   : this.customer.amount,
@@ -119,6 +120,7 @@ export class Interface extends Component<any,any>{
                         "scope"    : "invoice",
                     }),public_key = branch.keys.public;
 
+                    console.log('client_secret:',client_secret)
                     await com.init(public_key, client_secret);
 
                     let continueButtonFrame:Frame

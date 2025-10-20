@@ -16,7 +16,9 @@ export class Branches extends Processors {
 
         return {_id}
     }
-    @REST.get()
+    @REST.get(/*{
+        type : Array
+    }*/)
     @Authorization.protect()
     async 'branches/list'(@REST.schema() pagination:IPagination,ctx:ICTX):Promise<any[]> {
         return  await this.source.branches.find({}).toArray()

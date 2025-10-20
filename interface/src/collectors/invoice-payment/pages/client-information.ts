@@ -14,7 +14,6 @@ export class ClientInformation extends Component<any,any>{
 
     form !: any
     async mount(frame: Frame): Promise<this> {
-
         let validate = () => {
             setTimeout(() => {
                 let invoice = this.form.invoice.getComponent().getValue()

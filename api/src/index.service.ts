@@ -2,8 +2,6 @@ import {REST, Controller, Authorization} from "@hotfusion/ws";
 import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
 import Stripe from "stripe";
-import { URIParser } from "@hotfusion/ws/utils/uri-parser";
-import { MongoClient, Db, Collection, ObjectId } from "mongodb";
 
 //@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
 /*@Authorization.provider('local',{
@@ -15,7 +13,7 @@ import { MongoClient, Db, Collection, ObjectId } from "mongodb";
 
 export default class API extends Branches{
     private async getBranchDocument(query:{domain:string}){
-        let branch     = await this.source.branches.findOne(query) as IBranch | null;
+        let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
         let processors = await this.source.processors.find({
             _bid : branch._id
         }).toArray() as IProcessor[];
@@ -27,7 +25,7 @@ export default class API extends Branches{
     'ping'(){
         return 'pong'
     }
-    private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
+    /*private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
         let branch
             = await this.getBranchDocument({domain})
 
@@ -37,14 +35,14 @@ export default class API extends Branches{
 
         //Untyped function calls may not accept type arguments
         let processor = await this.source.processors.findOne({
-            _id : branch.processors.find(x => x.default)._id
+            _id : branch.processors.find(x => x.default)?._id
         }) as IProcessor | null
 
         if(!processor)
             throw new Error("processor was not found");
 
         return {branch,processor};
-    }
+    }*/
     @REST.get()
     async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
         let document
@@ -85,8 +83,8 @@ export default class API extends Branches{
     }
     @REST.post()
     async 'branch/charge'(@REST.schema() charge : Pick<IBranch, "domain" > & { id : string }){
-        let {branch,processor} = await this.getBranch(charge.domain)
-
+        let branch = await this.getBranchDocument(charge)
+        let processor = branch.processors.find(x => x.default) || branch.processors[0];
         let stripe
             = new Stripe(processor.keys[branch.mode].secret);
 
@@ -146,8 +144,12 @@ export default class API extends Branches{
     }
     @REST.get()
     async 'gateway/intent'(@REST.schema() intent:IGatewayIntent){
-        let {branch,processor}
-               = await this.getBranch(intent.domain);
+        let branch
+               = await this.getBranchDocument(intent);
+
+        console.log('branch:',branch);
+        let processor
+            = branch.processors.find(x => x.default) || branch.processors[0];
 
         let stripe
             = new Stripe(processor.keys[branch.mode].secret);
