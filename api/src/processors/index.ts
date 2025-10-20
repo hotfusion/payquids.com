@@ -1,5 +1,5 @@
 import {Authorization, REST} from "@hotfusion/ws";
-import {ObjectId} from "mongodb";
+import {Collection, ObjectId} from "mongodb";
 import {ICollections, IProcessor} from "../index.schema";
 import {Invoice} from "../invoice";
 interface ICTX {
@@ -7,6 +7,10 @@ interface ICTX {
 }
 
 export class Processors extends Invoice {
+    @REST.collection()
+    async 'processors'(){
+        return {}
+    }
     @REST.post()
     @Authorization.protect()
     async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys">, ctx:ICTX){
@@ -60,7 +64,6 @@ export class Processors extends Invoice {
             }
         })
     }
-
     @REST.get()
     @Authorization.protect()
     async ':_bid/processors/:_pid/update/keys'(@REST.schema() processor:Pick<IProcessor,  "keys" >, ctx:ICTX){
@@ -73,9 +76,7 @@ export class Processors extends Invoice {
             }
         })
     }
-    @REST.get(/*{
-        type : Array
-    }*/)
+    @REST.get()
     @Authorization.protect()
     async ':_bid/processors/list'({}, ctx:ICTX){
         return await this.source.processors.find({}).toArray()

@@ -56,7 +56,6 @@ export default class API extends Branches{
 
         let def = document.processors.find(x => x.default) || document.processors[0];
 
-        console.log(def)
         let processor= await this.source.processors.findOne({
             _id : def._id
         }) as IProcessor | null

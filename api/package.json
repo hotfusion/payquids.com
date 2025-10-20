@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "payq:build"   : "node node_modules/@hotfusion/ws/actions/_.build.js --dir=$PWD",
-    "payq:run"     : "sudo npm run payq:build && sudo node node_modules/@hotfusion/ws/actions/_.run.js --dir=$PWD/dist",
+    "payq:build"   : "sudo node node_modules/@hotfusion/ws/actions/_.build.js --dir=$PWD",
+    "payq:run"     : "npm run payq:build && sudo node node_modules/@hotfusion/ws/actions/_.run.js --dir=$PWD/dist",
     "payq:deploy"  : "npm run build && node ./node_modules/@hotfusion/ws/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22"
   },
   "dependencies": {
