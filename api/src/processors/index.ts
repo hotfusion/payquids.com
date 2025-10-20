@@ -9,7 +9,7 @@ interface ICTX {
 export class Processors extends Invoice {
     @REST.collection()
     async 'processors'(){
-        return {}
+        return this.source.processors.find({}).toArray()
     }
     @REST.post()
     @Authorization.protect()

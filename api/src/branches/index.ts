@@ -7,6 +7,10 @@ interface ICTX {
 }
 export class Branches extends Processors {
     tokens = []
+    @REST.collection()
+    async 'branches'(){
+        return this.source.branches.find({}).toArray()
+    }
 
     @REST.get()
     @Authorization.protect()
