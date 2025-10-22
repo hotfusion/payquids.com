@@ -66,7 +66,7 @@ export class Processors extends Invoice {
     }
     @REST.get()
     @Authorization.protect()
-    async ':_bid/processors/:_pid/update/keys'(@REST.schema() processor:Pick<IProcessor,  "keys" >, ctx:ICTX){
+    async ':_bid/processors/:_pid/keys'(@REST.schema() processor:Pick<IProcessor,  "keys" >, ctx:ICTX){
         return await this.source.processors.updateOne({
             _bid : new ObjectId(ctx.getParams()._bid),
             _id  : new ObjectId(ctx.getParams()._pid)
@@ -81,6 +81,4 @@ export class Processors extends Invoice {
     async ':_bid/processors/list'({}, ctx:ICTX){
         return await this.source.processors.find({}).toArray()
     }
-
-
 }
