@@ -115,6 +115,8 @@ class StripeProcessor extends EventEmitter implements Processor  {
             elements : this.elements,
             redirect : 'if_required'
         });
+
+        console.log(error,paymentIntent )
         this.emit('charge', {error,intent:paymentIntent});
         return { amount:paymentIntent.amount/100, error,intent:paymentIntent }
     }

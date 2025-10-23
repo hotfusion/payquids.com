@@ -146,14 +146,13 @@ export default class API extends Branches{
         let branch
                = await this.getBranchDocument(intent);
 
-        console.log('branch:',branch);
         let processor
             = branch.processors.find(x => x.default) || branch.processors[0];
 
         let stripe
             = new Stripe(processor.keys[branch.mode].secret);
 
-        let customer = this.source.customers.findOne({
+        let customer = await this.source.customers.findOne({
             email : intent.email
         });
 
@@ -181,7 +180,8 @@ export default class API extends Branches{
                 phone : intent.phone
             });
         }
-
+        console.log('customer:',customer);
+        console.log('profile:',profile);
         if(!customer.profiles.find(x => x.id === profile.id)) {
             customer.profiles.push({
                 id   : profile.id,
@@ -196,6 +196,8 @@ export default class API extends Branches{
                 }
             })
         }
+
+
 
         const {client_secret} = await stripe.paymentIntents.create({
             amount   : Number(intent.amount) * 100,

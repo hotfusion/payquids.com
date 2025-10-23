@@ -18,7 +18,6 @@ interface IInterfaceSettings {
     }>
 }
 export class Interface extends Component<any,any>{
-
     customer:{name:string,email:string,amount:number,invoice:string,phone:string}
     card:any
     constructor(settings: IInterfaceSettings) {
@@ -33,9 +32,7 @@ export class Interface extends Component<any,any>{
             domain : this.getSettings().domain
         })).output;
 
-        let selectedIndex= 0,charge:{amount:0, currency:'USD'};
-
-
+        let selectedIndex = 0,charge:{amount:0, currency:'USD'};
         let completionMode = () => {
             let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
             let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
@@ -108,8 +105,8 @@ export class Interface extends Component<any,any>{
                 },
                 align     : 'center',
                 component : () =>  new ProcessorGateway(this.getSettings() as any ).on('mounted', async (com) => {
-                    console.log('m')
-                    let {output:{client_secret}} = await Connector.getRoutes().gateway.intent({
+
+                    let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,
                         "amount"   : this.customer.amount,
                         "email"    : this.customer.email,
@@ -120,7 +117,6 @@ export class Interface extends Component<any,any>{
                         "scope"    : "invoice",
                     }),public_key = branch.keys.public;
 
-                    console.log('client_secret:',client_secret)
                     await com.init(public_key, client_secret);
 
                     let continueButtonFrame:Frame
@@ -168,14 +164,15 @@ export class Interface extends Component<any,any>{
                 }),
             }]
         }).on('command:click', async (e) => {
-
             if(selectedIndex === 1)
                 return;
 
             let goBackButtonFrame:Frame
                 = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+
             let continueButtonFrame:Frame
                 = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
             let paymentGatewayTab
                 = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
 
