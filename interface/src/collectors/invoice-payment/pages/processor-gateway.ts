@@ -15,7 +15,6 @@ class Processor {
 }
 
 class StripeProcessor extends EventEmitter implements Processor  {
-
     stripe      : any
     elements    : any
     card        : any
@@ -116,9 +115,12 @@ class StripeProcessor extends EventEmitter implements Processor  {
             redirect : 'if_required'
         });
 
-        console.log(error,paymentIntent )
-        this.emit('charge', {error,intent:paymentIntent});
-        return { amount:paymentIntent.amount/100, error,intent:paymentIntent }
+        this.emit('charge', { error, intent:paymentIntent });
+        return {
+            amount : paymentIntent.amount/100,
+            intent : paymentIntent,
+            error
+        }
     }
 }
 export class ProcessorGateway extends Component<any,any>{
@@ -132,7 +134,8 @@ export class ProcessorGateway extends Component<any,any>{
             return this.processor = (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
                 resolve(true)
                 this.getFrame().setStyle({opacity:1});
-            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
+            }).on("charge", (e) => this.emit("charge",e))
+              .on("change",(e) => this.emit("change",e))
         })
     }
     charge(){

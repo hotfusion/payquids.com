@@ -11,7 +11,7 @@ import Stripe from "stripe";
 })*/
 
 
-export default class API extends Branches{
+export default class Gateway extends Branches{
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
         let processors = await this.source.processors.find({
@@ -20,31 +20,8 @@ export default class API extends Branches{
         branch.processors = processors;
         return branch
     }
-
     @REST.get()
-    'ping'(){
-        return 'pong'
-    }
-    /*private async getBranch(domain:string):Promise<{branch:IBranch,processor:IProcessor}>{
-        let branch
-            = await this.getBranchDocument({domain})
-
-        if(!branch?.name)
-            throw new Error("domain was not found");
-
-
-        //Untyped function calls may not accept type arguments
-        let processor = await this.source.processors.findOne({
-            _id : branch.processors.find(x => x.default)?._id
-        }) as IProcessor | null
-
-        if(!processor)
-            throw new Error("processor was not found");
-
-        return {branch,processor};
-    }*/
-    @REST.get()
-    async 'branch/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
+    async 'gateway/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
         let document
             = await this.getBranchDocument(branch);
 
@@ -63,25 +40,26 @@ export default class API extends Branches{
         if(!processor)
             throw new Error("processor was not found");
 
-        let token= {
+        let session = {
             _pid    : processor._id,
-            token   : Date.now(),
+            _id     : Date.now(),
             created : Date.now()
         }
 
-        this.tokens.push(token);
+        this.session.push(session);
 
         return {
-            token  : token,
-            domain : document.domain,
-            mode   : document.mode,
-            keys   : {
+            _sid     : session._id,
+            gateway  : processor.gateway,
+            domain   : document.domain,
+            mode     : document.mode,
+            keys     : {
                 public : processor.keys[document.mode].public,
             }
         }
     }
     @REST.post()
-    async 'branch/charge'(@REST.schema() charge : Pick<IBranch, "domain" > & { id : string }){
+    async 'gateway/charge'(@REST.schema() charge : Pick<IBranch, "domain" > & { id : string }){
         let branch = await this.getBranchDocument(charge)
         let processor = branch.processors.find(x => x.default) || branch.processors[0];
         let stripe
@@ -180,8 +158,7 @@ export default class API extends Branches{
                 phone : intent.phone
             });
         }
-        console.log('customer:',customer);
-        console.log('profile:',profile);
+
         if(!customer.profiles.find(x => x.id === profile.id)) {
             customer.profiles.push({
                 id   : profile.id,

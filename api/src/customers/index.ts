@@ -7,6 +7,7 @@ interface ICTX {
     [key: string]: any
 }
 export class DB {
+    protected session = []
     protected source:{[key:string]: any} = {};
     @Controller.on("mounted")
     async mounted(){
@@ -21,6 +22,8 @@ export class DB {
             name : 'processors'
         }, {
             name : 'branches'
+        }, {
+            name : 'cards'
         }]
         try {
             await connection.connect();

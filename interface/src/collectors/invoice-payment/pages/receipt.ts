@@ -28,21 +28,16 @@ export class Receipt extends Component<any,any>{
               
               <div class="invoice">
                  <span class="date">
-                     <span class="material-symbols-outlined icon">alarm</span>
+                     <i class="fa-solid fa-calendar-days"></i>
                      ${new Date().toString().split(' ').slice(0,4).join(' ')}
                  </span>
-                 <span class="material-symbols-outlined icon">order_approve</span> #A01-0000000
-              </div>
-              
-              <div class="qrcode-container">
-                 <div>Scan this code to download the paid invoice to your mobile device</div>
-                 <canvas class="qrcode" style="align-self: center; margin-top: 20px;"></canvas>
+                 <i class="fa-solid fa-receipt"></i> #A01-0000000
               </div>
             </div>
         `)
 
 
-        setTimeout(() => {
+        /*setTimeout(() => {
             QRCode.toCanvas(Receipt.frame.getTag().querySelector('.qrcode'), 'sample text', {
                 errorCorrectionLevel: 'H',
                 type: 'image/jpeg',
@@ -55,7 +50,7 @@ export class Receipt extends Component<any,any>{
                     light : "#eaebec"
                 }
             })
-        })
+        })*/
         document.body
             .querySelector('.receipt-header')
             .setAttribute('mounted','true');

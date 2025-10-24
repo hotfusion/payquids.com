@@ -28,7 +28,7 @@ export class Interface extends Component<any,any>{
         });
     }
     async mount(frame: Frame): Promise<this> {
-        let branch = (await Connector.getRoutes().branch.metadata({
+        let branch = (await Connector.getRoutes().gateway.metadata({
             domain : this.getSettings().domain
         })).output;
 
@@ -104,7 +104,7 @@ export class Interface extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () =>  new ProcessorGateway(this.getSettings() as any ).on('mounted', async (com) => {
+                component : () =>  new ProcessorGateway( this.getSettings() as any ).on('mounted', async (com) => {
 
                     let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,
@@ -128,7 +128,7 @@ export class Interface extends Component<any,any>{
                         let { amount, error,intent }  = charge = await com.charge()
 
                         if(!error){
-                            let charge = await Connector.getRoutes().branch.charge({
+                            let charge = await Connector.getRoutes().gateway.charge({
                                 domain : this.getSettings().domain,
                                 id     : intent.id
                             });
