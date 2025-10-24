@@ -1,6 +1,7 @@
-import {REST, Controller, Authorization} from "@hotfusion/ws";
+import {REST } from "@hotfusion/ws";
 import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
+import {JWT,Crypto} from "@hotfusion/ws/utils"
 import Stripe from "stripe";
 
 //@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
@@ -12,6 +13,7 @@ import Stripe from "stripe";
 
 
 export default class Gateway extends Branches{
+    private SECRET = Crypto.generateJWTSecret()
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
         let processors = await this.source.processors.find({
@@ -21,7 +23,7 @@ export default class Gateway extends Branches{
         return branch
     }
     @REST.get()
-    async 'gateway/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >){
+    async 'gateway/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >,ctx){
         let document
             = await this.getBranchDocument(branch);
 
@@ -33,30 +35,28 @@ export default class Gateway extends Branches{
 
         let def = document.processors.find(x => x.default) || document.processors[0];
 
-        let processor= await this.source.processors.findOne({
+        let processor = await this.source.processors.findOne({
             _id : def._id
-        }) as IProcessor | null
+        }) as IProcessor | null;
 
         if(!processor)
             throw new Error("processor was not found");
 
-        let session = {
-            _pid    : processor._id,
-            _id     : Date.now(),
-            created : Date.now()
-        }
-
-        this.session.push(session);
-
-        return {
-            _sid     : session._id,
+        let session = JWT.sign({
             gateway  : processor.gateway,
             domain   : document.domain,
             mode     : document.mode,
+            created  : Date.now(),
             keys     : {
                 public : processor.keys[document.mode].public,
             }
-        }
+        },this.SECRET)
+
+        this.session.push({
+           session
+        });
+
+        return session
     }
     @REST.post()
     async 'gateway/charge'(@REST.schema() charge : Pick<IBranch, "domain" > & { id : string }){

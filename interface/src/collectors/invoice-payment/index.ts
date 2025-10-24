@@ -1,5 +1,5 @@
 import "../../_.style/index.less"
-import {Button, Component, Frame, Navigator} from "@hotfusion/ui";
+import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
@@ -28,11 +28,11 @@ export class Interface extends Component<any,any>{
         });
     }
     async mount(frame: Frame): Promise<this> {
-        let branch = (await Connector.getRoutes().gateway.metadata({
+        let session = (await Connector.getRoutes().gateway.metadata({
             domain : this.getSettings().domain
         })).output;
-
-        let selectedIndex = 0,charge:{amount:0, currency:'USD'};
+        let branch = Utils.decodeJwt(session);
+        let selectedIndex = 0, charge:{amount:0, currency:'USD'};
         let completionMode = () => {
             let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
             let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
@@ -54,7 +54,6 @@ export class Interface extends Component<any,any>{
                 Receipt.mount(charge,this.card,this.customer)
             },500)
         }
-
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
             theme      : 'dark',
