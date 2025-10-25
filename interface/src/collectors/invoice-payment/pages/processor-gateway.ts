@@ -1,16 +1,29 @@
 import {Component, Frame, Input} from "@hotfusion/ui";
-import type {IGatewayIntent} from "../../../../../api/src/index.schema"
 import * as Stripe from "@stripe/stripe-js";
 import EventEmitter from "eventemitter3";
 interface IPaymentGatewaySettings {
     theme: string;
-
+    branch : any
 }
 
-class Processor {
-    mount(...args: any[]) {}
-    charge(){
+class Processor extends EventEmitter {
+     mount  : (dom:HTMLElement) => Promise<this>
+     charge : () => Promise<{intent:any,amount:number}>
+}
 
+class PayPalProcessor extends EventEmitter implements Processor{
+    constructor(private public_key:string, private client_secret:string) {
+        super();
+    }
+    async charge(): Promise<{intent:any,amount:number}> {
+        return {
+            intent : false,
+            amount : 0,
+        }
+    }
+
+    async mount(...args: any[]): Promise<this> {
+        return this
     }
 }
 
@@ -115,37 +128,49 @@ class StripeProcessor extends EventEmitter implements Processor  {
             redirect : 'if_required'
         });
 
-        this.emit('charge', { error, intent:paymentIntent });
+       if(error)
+           throw error
+
         return {
             amount : paymentIntent.amount/100,
-            intent : paymentIntent,
-            error
+            intent : paymentIntent
         }
     }
 }
 export class ProcessorGateway extends Component<any,any>{
     processor: Processor;
-    constructor(settings: IPaymentGatewaySettings) {
+    constructor(private config: IPaymentGatewaySettings,private branch:any ) {
         super({},{});
     }
     async init(public_key:string,client_secret:string) {
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
-            return this.processor = (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
-                resolve(true)
-                this.getFrame().setStyle({opacity:1});
-            }).on("charge", (e) => this.emit("charge",e))
-              .on("change",(e) => this.emit("change",e))
+
+            if(this.branch.gateway === 'stripe')
+                return this.processor = (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
+                    resolve(true)
+                    this.getFrame().setStyle({opacity:1});
+                }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
+
+            if(this.branch.gateway === 'paypal')
+                return this.processor = (await new PayPalProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
+                    resolve(true)
+                    this.getFrame().setStyle({opacity:1});
+                }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
         })
     }
-    charge(){
-        return this.processor.charge()
+    async charge(){
+        try {
+            let {intent} = await this.processor.charge()
+            console.log(intent)
+            this.emit('charge', { intent });
+        } catch (error){
+            alert('Payment Error');
+            console.error(error)
+        }
+
     }
     async mount(frame: Frame): Promise<this> {
-
-        setTimeout(() => {
-            this.emit('mounted',this)
-        },700)
         return super.mount(frame);
     }
 }

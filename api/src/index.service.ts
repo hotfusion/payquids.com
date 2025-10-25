@@ -127,6 +127,7 @@ export default class Gateway extends Branches{
         let processor
             = branch.processors.find(x => x.default) || branch.processors[0];
 
+        console.log(processor,branch)
         let stripe
             = new Stripe(processor.keys[branch.mode].secret);
 

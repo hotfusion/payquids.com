@@ -103,7 +103,8 @@ export class Interface extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () =>  new ProcessorGateway( this.getSettings() as any ).on('mounted', async (com) => {
+                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (com) => {
+
 
                     let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,

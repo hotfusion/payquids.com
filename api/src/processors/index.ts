@@ -78,6 +78,27 @@ export class Processors extends Invoice {
     }
     @REST.get()
     @Authorization.protect()
+    async ':_bid/processors/:_pid/default'({}, ctx:ICTX){
+        await this.source.processors.updateOne({
+            _bid    : new ObjectId(ctx.getParams()._bid),
+            default : true
+        },{
+            $set : {
+                default : false
+            }
+        })
+
+       return await this.source.processors.updateOne({
+           _bid : new ObjectId(ctx.getParams()._bid),
+           _id  : new ObjectId(ctx.getParams()._pid)
+       },{
+           $set : {
+               default : true
+           }
+       })
+    }
+    @REST.get()
+    @Authorization.protect()
     async ':_bid/processors/list'({}, ctx:ICTX){
         return await this.source.processors.find({}).toArray()
     }
