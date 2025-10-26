@@ -105,8 +105,7 @@ export class Interface extends Component<any,any>{
                 align     : 'center',
                 component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (com) => {
 
-
-                    let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
+                    let { output : {client_secret,client_token} } = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,
                         "amount"   : this.customer.amount,
                         "email"    : this.customer.email,

@@ -12,6 +12,7 @@
     "@hotfusion/ws": "../../ws/engine/dist",
     "stripe" : "^18.5.0",
     "vite": "^7.1.5",
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@vitejs/plugin-vue" : "^6.0.1",
     "juice": "^11.0.1",
     "puppeteer" : "^24.20.0",
