@@ -14,10 +14,14 @@ class Processor extends EventEmitter {
 declare const paypal:any;
 
 class PayPalProcessor extends EventEmitter implements Processor {
-    constructor(private public_key:string, private client_secret:string, private client_token:string) {
+    private cardFields:any
+    constructor(private public_key:string, private client_secret:string) {
         super();
     }
     async charge(): Promise<{intent:any,amount:number}> {
+
+        const result = await this.cardFields.submit();
+        console.log(result)
         return {
             intent : false,
             amount : 0,
@@ -29,42 +33,61 @@ class PayPalProcessor extends EventEmitter implements Processor {
         form.setHTML(`<div id="card-number"></div><div id="card-cvv"></div><div id="card-expiry"></div>`);
         form.on('mounted', () => {
             let script = document.createElement('script');
-            script.src = `https://www.paypal.com/sdk/js?client-id=${this.public_key}&components=card-fields`;
+            script.src = `https://www.paypal.com/sdk/js?client-id=${this.public_key}&components=card-fields&intent=capture&currency=USD`;
             script.onload = async () => {
                 let getRootStyle = (style:string) => {
                     return getComputedStyle(document.body).getPropertyValue(style).trim()
                 }
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                let cardFields = paypal.CardFields({
+                this.cardFields = paypal.CardFields({
                     createOrder: async () => {
                         return this.client_secret;
                     },
+                    onApprove: () => {
+
+                    },
+                    onError: () => {},
                     style: {
                         'input': {
-                            'font-size': '16px',
-                            'color': '#3A3A3A',
-                            'padding': '5px',
+                            'font-size': '12px',
+                            'color': getRootStyle('--color-text'),
+                            'border' :  'solid 1px ' + getRootStyle('--color-border'),
+                            'padding': '5px 10px',
                             'background': getRootStyle('--color-bg-secondary'),
                             'outline': 'none',
+                            borderRadius :'0px'
                         },
                         'input:focus': {
-                            'outline': 'none',
-                            'box-shadow': 'none'
+                            'outline'      : 'none',
+                            'box-shadow'   : 'none',
+                            'border-color' : 'solid 1px ' + getRootStyle('--color-accent'),
+                        },
+                        'input:hover': {
+                            'border' : 'solid 1px ' + getRootStyle('--color-accent'),
                         },
                         '.valid': {
-                            'color': 'green'
+                            'color'  : getRootStyle('--color-text'),
+                            'border' : 'solid 1px ' + getRootStyle('--color-bg'),
                         },
                         '.invalid': {
-                            'color': 'red'
+                            'outline'    : 'none',
+                            'box-shadow' : 'none',
+                            'border'     : 'solid 1px ' + getRootStyle('--color-border-exception'),
+                            'color'      : getRootStyle('--color-border-exception')
                         }
-                    }
+                    },
+                    inputEvents: {
+                        onChange: (data) => {
+                            this.emit('change',{complete:data.isFormValid,component:this})
+                        }
+                    },
                 })
 
-                await cardFields.NumberField().render('#card-number')
+                await this.cardFields.NumberField().render('#card-number')
+                await this.cardFields.ExpiryField().render('#card-expiry')
+                await this.cardFields.CVVField().render('#card-cvv');
 
-                await cardFields.ExpiryField().render('#card-expiry')
-
-                await cardFields.CVVField().render('#card-cvv')
+                this.emit('mounted',this)
             }
             document.body.appendChild(script);
         })
@@ -193,24 +216,19 @@ export class ProcessorGateway extends Component<any,any>{
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
 
-            if(this.branch.gateway === 'stripe')
-                return this.processor = (await new StripeProcessor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
-                    resolve(true)
-                    this.getFrame().setStyle({opacity:1});
-                }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
+            let Processor
+                = this.branch.gateway === 'stripe'? StripeProcessor : PayPalProcessor
 
-            if(this.branch.gateway === 'paypal')
-                return this.processor = (await new PayPalProcessor(public_key,client_secret,client_token).mount(this.getFrame().getTag())).on("mounted", () => {
-                    resolve(true)
-                    this.getFrame().setStyle({opacity:1});
-                }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
+            return this.processor = (await new Processor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
+                resolve(true)
+                this.getFrame().setStyle({opacity:1});
+            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
         })
     }
     async charge(){
         try {
-            let {intent} = await this.processor.charge()
-            console.log(intent)
-            this.emit('charge', { intent });
+            let {intent,amount} = await this.processor.charge()
+            this.emit('charge', { intent, amount });
         } catch (error){
             alert('Payment Error');
             console.error(error)

@@ -12,7 +12,7 @@ import paypal from "@paypal/checkout-server-sdk";
 })*/
 
 
-export default class Gateway extends Branches{
+export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
@@ -118,7 +118,17 @@ export default class Gateway extends Branches{
         }
 
         if(processor.gateway === "paypal"){
-
+            let client = new paypal.core.PayPalHttpClient(
+                new paypal.core.SandboxEnvironment(
+                    processor.keys[branch.mode].public,
+                    processor.keys[branch.mode].secret
+                )
+            );
+            const request = new paypal.orders.OrdersCaptureRequest(charge.id);
+            request.requestBody({}); // required by SDK even if empty
+            const response = await client.execute(request);
+            // return the whole result or selected fields
+            console.log(response);
         }
 
         return {
@@ -136,8 +146,6 @@ export default class Gateway extends Branches{
             = branch.processors.find(x => x.default) || branch.processors[0];
 
         //console.log(processor,branch)
-
-
 
         let customer = await this.source.customers.findOne({
             email : intent.email
@@ -203,8 +211,11 @@ export default class Gateway extends Branches{
         }
 
         if(processor.gateway === 'paypal') {
+            let sandbox
+                = branch.mode === 'development'?paypal.core.SandboxEnvironment:paypal.core.LiveEnvironment;
+
             let client = new paypal.core.PayPalHttpClient(
-                new paypal.core.SandboxEnvironment(
+                new sandbox(
                     processor.keys[branch.mode].public,
                     processor.keys[branch.mode].secret
                 )
@@ -225,8 +236,7 @@ export default class Gateway extends Branches{
                 });
 
             return {
-                client_secret : (await client.execute(request)).result.id,
-                //client_token  : (await client.execute(new paypal.payments.ClientTokenRequest())).result.client_token
+                client_secret : (await client.execute(request)).result.id
             };
         }
 

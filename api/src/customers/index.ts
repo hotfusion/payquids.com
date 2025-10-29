@@ -11,7 +11,7 @@ export class DB {
     protected source:{[key:string]: any} = {};
     @Controller.on("mounted")
     async mounted(){
-        let uri = 'mongodb://localhost:27017'
+        let uri = 'mongodb://root:example@mongo:27017'
         //this.dbName = URIParser(uri).database;
         let connection  = new MongoClient(uri);
         let collections = [{
@@ -26,10 +26,14 @@ export class DB {
             name : 'cards'
         }]
         try {
+
+            console.log("MongoDB configuration:",URIParser(uri));
+            console.log("MongoDB connecting to:",uri);
             await connection.connect();
             let source = connection.db(URIParser(uri).database);
 
             for (const {name} of collections) {
+                console.log(`- MongoDB collection created [${name}]`);
                 const exists = await source.listCollections({ name }).hasNext();
                 if (!exists) {
                     await source.createCollection(name);
@@ -38,7 +42,7 @@ export class DB {
                 //Type { name: string; } cannot be used as an index type.
                 this.source[name] = source.collection(name);
             }
-
+            console.log("MongoDB connected!");
             return this;
         } catch (err) {
             console.error('❌ MongoDB connection failed:', err);

@@ -1,12 +1,35 @@
 {
-  "name": "api",
+  "name": "gateway",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "ws" : {
+    "port" : {
+      "main" : "8890"
+    },
+    "ssl" : false,
+    "environment": {
+      "MONGO_URI": "mongodb://root:example@mongo:27017"
+    },
+    "docker" : {
+      "services" : {
+        "mongo" : {
+          "image": "mongo:7.0",
+          "container_name": "mongo",
+          "restart": "unless-stopped",
+          "environment":{
+            "MONGO_INITDB_ROOT_USERNAME": "root",
+            "MONGO_INITDB_ROOT_PASSWORD": "example"
+          },
+          "ports":["27017:27017"]
+        }
+      }
+    }
+  },
   "scripts": {
     "payq:build"   : "sudo node node_modules/@hotfusion/ws/actions/_.build.js --dir=$PWD",
     "payq:run"     : "npm run payq:build && sudo node node_modules/@hotfusion/ws/actions/_.run.js --dir=$PWD/dist",
-    "payq:deploy"  : "npm run build && node ./node_modules/@hotfusion/ws/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22"
+    "payq:deploy"  : "npm run payq:build && sudo node ./node_modules/@hotfusion/ws/actions/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22"
   },
   "dependencies": {
     "@hotfusion/ws": "../../ws/engine/dist",

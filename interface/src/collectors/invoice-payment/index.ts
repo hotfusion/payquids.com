@@ -105,7 +105,7 @@ export class Interface extends Component<any,any>{
                 align     : 'center',
                 component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (com) => {
 
-                    let { output : {client_secret,client_token} } = await Connector.getRoutes().gateway.intent({
+                    let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,
                         "amount"   : this.customer.amount,
                         "email"    : this.customer.email,
@@ -114,9 +114,9 @@ export class Interface extends Component<any,any>{
                         "mode"     : branch.mode,
                         "currency" : "usd",
                         "scope"    : "invoice",
-                    }),public_key = branch.keys.public;
+                    });
 
-                    await com.init(public_key, client_secret);
+                    await com.init(branch.keys.public, client_secret);
 
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
@@ -124,7 +124,7 @@ export class Interface extends Component<any,any>{
                     continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
                         continueButtonFrame.setBusy(true);
 
-                        let { amount, error,intent }  = charge = await com.charge()
+                        let { error,intent }  = charge = await com.charge()
 
                         if(!error){
                             let charge = await Connector.getRoutes().gateway.charge({

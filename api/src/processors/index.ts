@@ -1,7 +1,8 @@
 import {Authorization, REST} from "@hotfusion/ws";
 import {Collection, ObjectId} from "mongodb";
-import {ICollections, IProcessor} from "../index.schema";
+import {IBranch, ICollections, IProcessor} from "../index.schema";
 import {Invoice} from "../invoice";
+import paypal from "@paypal/checkout-server-sdk";
 interface ICTX {
     [key: string]: any
 }
@@ -14,11 +15,61 @@ export class Processors extends Invoice {
     @REST.post()
     @Authorization.protect()
     async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys">, ctx:ICTX){
+
+        let _bid = new ObjectId(ctx.getParams()._bid)
+        let availabilities = ['checkout','gateway'];
+
+        if(processor.gateway === 'stripe'){
+            //&& (await stripe(keys.private).accounts.retrieve())?.object !== 'account'
+        }
+
+        if(processor.gateway === 'paypal'){
+            let modes = ['development','production'];
+            for(let i = 0; i < modes.length; i++)
+                if(processor?.keys?.[modes[i]]?.public && processor?.keys?.[modes[i]]?.secret){
+
+                    let sandbox
+                        = modes[i] === 'development'? paypal.core.SandboxEnvironment : paypal.core.LiveEnvironment;
+
+                    let client = new paypal.core.PayPalHttpClient(
+                        new sandbox(processor.keys[modes[i]].public, processor.keys[modes[i]].secret)
+                    );
+
+                    const request = new paypal.orders.OrdersCreateRequest();
+                    request.prefer("return=representation");
+                    request.requestBody({
+                        intent: "CAPTURE",
+                        purchase_units: [
+                            {
+                                amount: {
+                                    currency_code: "USD",
+                                    value: "0.01" // Minimal amount to avoid real charges
+                                }
+                            }
+                        ],
+                        payment_source: {
+                            card: {
+                                number: "4111111111111111", // DO NOT use real card numbers; use a test card or vaulted card token
+                                expiry: "2026-12",
+                                cvv: "123",
+                                name: "Test User"
+                            }
+                        }
+                    });
+
+                    console.log('create order',modes[i],processor.keys[modes[i]])
+                    const response = await client.execute(request);
+                    console.log("Order created successfully:", response.result);
+
+                }
+        }
+        //
         let _id = (await this.source.processors.insertOne({
-            _bid    : new ObjectId(ctx.getParams()._bid),
-            name    : processor.name,
-            gateway : processor.gateway,
-            email   : processor.email,
+            _bid           : _bid,
+            name           : processor.name,
+            gateway        : processor.gateway,
+            email          : processor.email,
+            availabilities : availabilities,
             keys    : {
                 production : {
                     public : processor?.keys?.production?.public || false,
