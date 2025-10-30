@@ -11,7 +11,7 @@ export class DB {
     protected source:{[key:string]: any} = {};
     @Controller.on("mounted")
     async mounted(){
-        let uri = 'mongodb://root:example@mongo:27017'
+        let uri = 'mongodb://127.0.0.1:27017' //'mongodb://root:example@mongo:27017'
         //this.dbName = URIParser(uri).database;
         let connection  = new MongoClient(uri);
         let collections = [{
@@ -26,8 +26,6 @@ export class DB {
             name : 'cards'
         }]
         try {
-
-            console.log("MongoDB configuration:",URIParser(uri));
             console.log("MongoDB connecting to:",uri);
             await connection.connect();
             let source = connection.db(URIParser(uri).database);

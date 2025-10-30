@@ -60,7 +60,6 @@ class InvoiceUtils {
 }
 export class Invoice extends Customers {
     @REST.post()
-
     async ':_bid/invoices/create/:_pid/:_cid'(@REST.schema() invoice:Omit<IInvoice, '_id' | '_bid' | '_pid' | '_cid' | 'created'>, ctx:ICTX){
         let _id = (await this.source.invoices.insertOne({
             _bid     : new ObjectId(ctx.getParams()._bid),
@@ -80,8 +79,8 @@ export class Invoice extends Customers {
 
         return { _id };
     }
+    
     @REST.post()
-
     /**
      * Update invoice by providing invoice id (_id) inside the path
      *

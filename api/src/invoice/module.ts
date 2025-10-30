@@ -155,6 +155,7 @@ export class InvoiceModule {
         const vite = await createServer({
             server: { middlewareMode: true },
             appType: 'custom',
+            //@ts-ignore
             plugins: [(await import('@vitejs/plugin-vue')).default()],
         });
 
@@ -166,10 +167,11 @@ export class InvoiceModule {
 
             // 2. Prepare data for invoice
             const date = new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
+                year  : 'numeric',
+                month : 'long',
+                day   : 'numeric',
             });
+
             const invoiceNumber = `INV-${Math.floor(Math.random() * 1000000)
                 .toString()
                 .padStart(6, '0')}`;
@@ -189,6 +191,7 @@ export class InvoiceModule {
                     return { ...item, total: (item as CollectorItem).amount };
                 }
             });
+
             function extractVueStyles(file: string): string {
                 const filepath = resolve(__dirname, 'templates', `${file}.vue`);
                 const source = readFileSync(filepath, 'utf-8');

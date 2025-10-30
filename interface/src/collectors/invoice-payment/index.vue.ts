@@ -22,6 +22,7 @@ export default defineComponent({
       }
     },
     async mounted() {
+        console.log(this.uri)
         document.body.setAttribute('theme', 'dark');
         this.connector  = await Connector.connect(this.uri);
         this._interface = new Interface({

@@ -7,15 +7,24 @@ const meta = {
     component: application,
     args : {
         theme : 'dark'
-    }
+    },
+    argTypes: {
+        uri: {
+            control: { type: 'select' },
+            options: [ // must be here, at the same level as control
+                'http://0.0.0.0:8890/gateway'
+            ],
+            description: 'Choose which server to connect to',
+        },
+    },
 }
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     args : {
-        uri   : "https://localhost/gateway",
-        theme : 'dark'
+        theme : 'dark',
+        uri: "http://0.0.0.0:8890/gateway"
     }
 };
 
