@@ -8,7 +8,7 @@ interface IPaymentGatewaySettings {
 
 class Processor extends EventEmitter {
      mount  : (dom:HTMLElement) => Promise<this>
-     charge : () => Promise<{intent:any,amount:number}>
+     charge : () => Promise<{intent:any,amount:number,error:any}>
 }
 
 declare const paypal:any;
@@ -18,11 +18,12 @@ class PayPalProcessor extends EventEmitter implements Processor {
     constructor(private public_key:string, private client_secret:string) {
         super();
     }
-    async charge(): Promise<{intent:any,amount:number}> {
+    async charge(): Promise<{intent:any,amount:number,error:any}> {
 
         const result = await this.cardFields.submit();
-        console.log(result)
+
         return {
+            error  : null,
             intent : false,
             amount : 0,
         }
@@ -198,10 +199,8 @@ class StripeProcessor extends EventEmitter implements Processor  {
             redirect : 'if_required'
         });
 
-       if(error)
-           throw error
-
         return {
+            error  : error || null,
             amount : paymentIntent.amount/100,
             intent : paymentIntent
         }
@@ -227,11 +226,12 @@ export class ProcessorGateway extends Component<any,any>{
     }
     async charge(){
         try {
-            let {intent,amount} = await this.processor.charge()
+            let {intent,amount,error} = await this.processor.charge()
             this.emit('charge', { intent, amount });
+
+            return {intent,amount,error}
         } catch (error){
-            alert('Payment Error');
-            console.error(error)
+            return {error}
         }
 
     }

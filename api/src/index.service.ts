@@ -241,4 +241,12 @@ export default class Gateway extends Branches {
         }
 
     }
+
+    @REST.get()
+    async '@branch/:_bid'({},ctx){
+        return {
+            html : 'true',
+            _bid : ctx.getParams()._bid
+        }
+    }
 }

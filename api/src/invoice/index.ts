@@ -4,7 +4,7 @@ import {Authorization, REST} from "@hotfusion/ws";
 import { MongoClient, Db, Collection, ObjectId } from "mongodb"
 import {IInvoice} from "../index.schema";
 import {Customers} from "../customers";
-import {HtmlToPdf} from "../_.components/HtmltoPdf";
+import {PDFConverter} from "../_/html-to-pdf";
 
 interface ICTX {
     [key: string]: any;
@@ -14,7 +14,7 @@ class InvoiceUtils {
     static async PDF(_iid:string,Mongo:any): Promise<any> {
         let html = await InvoiceUtils.HTML(_iid,Mongo);
         let converter
-            = new HtmlToPdf();
+            = new PDFConverter();
 
         let buffer
             = await converter.convert(html);

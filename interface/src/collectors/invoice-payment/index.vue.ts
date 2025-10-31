@@ -5,8 +5,8 @@ import { defineComponent } from 'vue';
 export default defineComponent({
     props : {
         theme : {
-            type    : String,
-            default : 'default',
+            type     : String,
+            default  : 'default',
             required : true
         },
         uri : {
@@ -22,7 +22,6 @@ export default defineComponent({
       }
     },
     async mounted() {
-        console.log(this.uri)
         document.body.setAttribute('theme', 'dark');
         this.connector  = await Connector.connect(this.uri);
         this._interface = new Interface({

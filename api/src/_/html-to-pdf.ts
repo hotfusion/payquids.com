@@ -1,6 +1,6 @@
 import puppeteer, { Browser, PDFOptions } from "puppeteer";
 
-export class HtmlToPdf {
+export class PDFConverter {
     private browser: Browser | null = null;
 
     private async getBrowser() {
