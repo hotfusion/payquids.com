@@ -17,36 +17,6 @@ interface Policy { policy: string; value: string; }
 
 export class InvoiceModule {
     constructor(private customer: Partial<Customer>, private merchant: Partial<Merchant>) {}
-
-    private async compileVueFile(file: string) {
-        // Dynamically import ESM-only packages inside async function
-        const { parse, compileScript, compileTemplate } = await import('@vue/compiler-sfc');
-
-        const filepath = resolve(__dirname, 'templates', `${file}.vue`);
-        const source = readFileSync(filepath, 'utf-8');
-
-        // Parse the SFC
-        const { descriptor } = parse(source);
-
-        // Compile <script setup>
-        const script = compileScript(descriptor, { id: 'invoice' });
-
-        // Compile <template>
-        const template = compileTemplate({
-            id: 'invoice',
-            source: descriptor.template?.content || '',
-            filename: filepath,
-        });
-
-        // Combine compiled script + template into a component
-        const component = new Function(
-            'require',
-            `${script.content}; return { ...exports, render: (${template.code}) }`
-        )(require);
-
-        return component;
-    }
-
     convertDraftToMongo(draftSchema){
         function mapType(type) {
             if (Array.isArray(type)) return type.map(mapType);
@@ -146,6 +116,36 @@ export class InvoiceModule {
 
         return transform(draftSchema);
     }
+
+    private async compileVueFile(file: string) {
+        // Dynamically import ESM-only packages inside async function
+        const { parse, compileScript, compileTemplate } = await import('@vue/compiler-sfc');
+
+        const filepath = resolve(__dirname, 'templates', `${file}.vue`);
+        const source = readFileSync(filepath, 'utf-8');
+
+        // Parse the SFC
+        const { descriptor } = parse(source);
+
+        // Compile <script setup>
+        const script = compileScript(descriptor, { id: 'invoice' });
+
+        // Compile <template>
+        const template = compileTemplate({
+            id: 'invoice',
+            source: descriptor.template?.content || '',
+            filename: filepath,
+        });
+
+        // Combine compiled script + template into a component
+        const component = new Function(
+            'require',
+            `${script.content}; return { ...exports, render: (${template.code}) }`
+        )(require);
+
+        return component;
+    }
+
     async create(
         type: 'services' | 'products' | 'collectors',
         items: Array<ServiceItem | ProductItem | CollectorItem>,

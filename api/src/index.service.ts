@@ -1,9 +1,10 @@
-import {REST } from "@hotfusion/ws";
+import {Controller, REST, Bundler} from "@hotfusion/ws";
 import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
 import {JWT,Crypto} from "@hotfusion/ws/utils"
 import Stripe from "stripe";
 import paypal from "@paypal/checkout-server-sdk";
+import * as path from 'path'
 //@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
 /*@Authorization.provider('local',{
     adapter : {
@@ -14,6 +15,12 @@ import paypal from "@paypal/checkout-server-sdk";
 
 export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
+    private ManagerBundle:any
+
+    @Controller.on('mounted')
+    async 'gateway:mounted'() {
+        this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@manager/index.vue')).build()).compile;
+    }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
         let processors = await this.source.processors.find({

@@ -1,0 +1,213 @@
+import "../../_.style/index.less"
+import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
+import {ClientInformation} from "./pages/client-information";
+import {ProcessorGateway} from "./pages/processor-gateway";
+import {Receipt} from "./pages/receipt";
+import {Connector} from '../../../../api/node_modules/@hotfusion/ws/client/index.esm.js';
+
+interface IInterfaceSettings {
+    theme     : string;
+    domain    : string;
+    connector : Connector
+    client   ?: Partial<{
+        name    : string;
+        email   : string;
+        phone   : string;
+        invoice : string;
+        amount  : number;
+    }>
+}
+export class Interface extends Component<any,any>{
+    customer:{name:string,email:string,amount:number,invoice:string,phone:string}
+    card:any
+    constructor(settings: IInterfaceSettings) {
+        super(settings || {},{
+            theme  : 'default',
+            domain : '',
+            client : false
+        });
+    }
+    async mount(frame: Frame): Promise<this> {
+        let session = (await Connector.getRoutes().gateway.metadata({
+            domain : this.getSettings().domain
+        })).output;
+        let branch = Utils.decodeJwt(session);
+        let selectedIndex = 0, charge:{amount:0, currency:'USD'};
+        let completionMode = () => {
+            let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+            let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
+            let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+            let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+            continueButtonFrame.setBusy(true)
+            continueButtonFrame.getComponent<Button>().updateSettings({
+                disabled : false,
+                label    : `Return to ${this.getSettings().domain}`
+            })
+
+            goBackButtonFrame.setVisible(false)
+            paymentGatewayTab.setDisabled(false)
+            receiptTab.setDisabled(false)
+
+            setTimeout(() => {
+                continueButtonFrame.setBusy(false);
+                Receipt.mount(charge,this.card,this.customer)
+            },500)
+        }
+        let navigator = new Navigator({
+            selectedIndex : selectedIndex,
+            theme      : 'dark',
+            stretch    : true,
+            commands   : [{
+                id       : 'next',
+                type     : 'button',
+                label    : 'Continue',
+                position : 'right-bottom',
+                theme    : 'dark',
+                disabled : true,
+                icon     : {
+                    class : 'ri-arrow-drop-right-line'
+                }
+            },{
+                id       : 'back',
+                type     : 'button',
+                label    : 'Go Back',
+                position : 'left-bottom',
+                theme    : 'dark',
+                disabled : true
+            }],
+            components : [{
+                id        : 'client-information-tab',
+                title     : 'Invoice',
+                align     : 'center',
+                icon : {
+                  class : 'ri-arrow-drop-right-line'
+                },
+                component : () => new ClientInformation(this.getSettings() as any ).on("change", ({complete,client}) => {
+                    let continueButtonFrame:Frame
+                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+                    let paymentGatewayTab
+                        = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+
+                    this.customer = client;
+                    paymentGatewayTab.setDisabled(!complete)
+                    continueButtonFrame.setDisabled(!complete)
+
+                }),
+            },{
+                id        : 'payment-gateway-tab',
+                title     : 'Payment',
+                disabled  : true,
+                icon : {
+                    class : 'ri-arrow-drop-right-line'
+                },
+                align     : 'center',
+                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (com) => {
+
+                    let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
+                        "domain"   : this.getSettings().domain,
+                        "amount"   : this.customer.amount,
+                        "email"    : this.customer.email,
+                        "name"     : this.customer.name,
+                        "phone"    : this.customer.phone,
+                        "mode"     : branch.mode,
+                        "currency" : "usd",
+                        "scope"    : "invoice",
+                    });
+
+                    await com.init(branch.keys.public, client_secret);
+
+                    let continueButtonFrame:Frame
+                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+                    continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
+                        continueButtonFrame.setBusy(true);
+
+                        let { error,intent }  = charge = await com.charge()
+
+                        if(!error){
+                            let charge = await Connector.getRoutes().gateway.charge({
+                                domain : this.getSettings().domain,
+                                id     : intent.id
+                            });
+
+                            if(charge.output.completed)
+                                this.card = charge.output.card
+
+                            selectedIndex++;
+                            navigator.updateSettings({
+                                selectedIndex
+                            });
+                        }
+                    });
+
+                }).on('change', ({complete}) => {
+                    let continueButtonFrame:Frame
+                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+                    continueButtonFrame.setDisabled(!complete)
+                }),
+
+            },{
+                id        : 'receipt-tab',
+                title     : 'Receipt',
+                disabled  : true,
+                icon : {
+                    class : 'ri-arrow-drop-right-line'
+                },
+                align     : 'center',
+                component : () => new Receipt(this.getSettings() as any).on('mounted',(component) => {
+                    if(selectedIndex === 2)
+                        completionMode();
+                }),
+            }]
+        }).on('command:click', async (e) => {
+            if(selectedIndex === 1)
+                return;
+
+            let goBackButtonFrame:Frame
+                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+
+            let continueButtonFrame:Frame
+                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+            let paymentGatewayTab
+                = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+
+            if(e.item.id === 'next')
+               continueButtonFrame.setBusy(true);
+
+            if(e.item.id === 'back' && selectedIndex > 0)
+                selectedIndex--;
+
+            if(e.item.id === 'next' && selectedIndex < 2)
+                selectedIndex++;
+
+            goBackButtonFrame
+                .setDisabled(selectedIndex === 0)
+
+            if(selectedIndex === 1){
+                paymentGatewayTab
+                    .setDisabled(false);
+
+                continueButtonFrame
+                    .setDisabled(true);
+            }
+
+            navigator.updateSettings({selectedIndex});
+        }).on('index:changed', ({index}) => {
+            selectedIndex = index;
+        });
+
+        let form
+            = new Frame('form',navigator);
+
+        this.on('settings', this.render)
+        await frame.push(form);
+        return super.mount(frame);
+    }
+    render(){
+        console.log('theme',this.getSettings().theme);
+    }
+}
