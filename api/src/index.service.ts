@@ -19,7 +19,7 @@ export default class Gateway extends Branches {
 
     @Controller.on('mounted')
     async 'gateway:mounted'() {
-        this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@manager/index.vue')).build()).compile;
+        this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/index.vue')).build()).compile;
     }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
@@ -250,10 +250,9 @@ export default class Gateway extends Branches {
     }
 
     @REST.get()
-    async '@branch/:_bid'({},ctx){
-        return {
-            html : 'true',
-            _bid : ctx.getParams()._bid
-        }
+    async 'branch/:_bid'({},ctx){
+        let html = this.ManagerBundle({theme : 'dark', uri : 'http://0.0.0.0:8890/gateway'});
+        return ctx.html(html);
+
     }
 }
