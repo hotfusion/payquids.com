@@ -19,7 +19,7 @@ export default class Gateway extends Branches {
 
     @Controller.on('mounted')
     async 'gateway:mounted'() {
-        this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/index.vue')).build()).compile;
+        this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/invoice-payment/index.vue')).build()).compile;
     }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;

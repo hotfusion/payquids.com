@@ -7,6 +7,10 @@
     "port" : {
       "main" : "8890"
     },
+    "include": [
+      "**/*.vue",
+      "**/*.less"
+    ],
     "ssl" : false,
     "environment": {
       "MONGO_URI": "mongodb://root:example@mongo:27017"
@@ -40,7 +44,7 @@
     "juice": "^11.0.1",
     "puppeteer" : "^24.20.0",
     "mongodb" : "^6.20.0",
-    "@hotfusion/ui": "../../ui"
+    "@hotfusion/ui": "../../ui/dist"
   },
   "devDependencies": {
     "gulp": "^5.0.1",

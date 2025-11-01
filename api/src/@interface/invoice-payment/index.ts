@@ -1,9 +1,9 @@
-import "../../_.style/index.less"
-import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
+
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
 import {Connector} from "@hotfusion/ws/client/index.esm.js";
+import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
 
 interface IInterfaceSettings {
     theme     : string;
@@ -31,29 +31,35 @@ export class Interface extends Component<any,any>{
         let session = (await Connector.getRoutes().gateway.metadata({
             domain : this.getSettings().domain
         })).output;
-        let branch = Utils.decodeJwt(session);
-        let selectedIndex = 0, charge:{amount:0, currency:'USD'};
-        let completionMode = () => {
-            let paymentGatewayTab    = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
-            let receiptTab           = navigator.getFrame().findBlockById('tab:receipt-tab');
-            let goBackButtonFrame:Frame          = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
-            let continueButtonFrame:Frame        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
 
-            continueButtonFrame.setBusy(true)
+        let branch
+            = Utils.decodeJwt(session);
+
+        let selectedIndex = 0,
+            charge:{amount:0, currency:'USD'};
+
+        let completionMode = () => {
+            let paymentGatewayTab         = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+            let receiptTab                = navigator.getFrame().findBlockById('tab:receipt-tab');
+            let goBackButtonFrame:Frame   = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+            let continueButtonFrame:Frame = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+            continueButtonFrame.setBusy(true);
             continueButtonFrame.getComponent<Button>().updateSettings({
                 disabled : false,
                 label    : `Return to ${this.getSettings().domain}`
-            })
+            });
 
-            goBackButtonFrame.setVisible(false)
-            paymentGatewayTab.setDisabled(false)
-            receiptTab.setDisabled(false)
+            goBackButtonFrame.setVisible(false);
+            paymentGatewayTab.setDisabled(false);
+            receiptTab.setDisabled(false);
 
             setTimeout(() => {
                 continueButtonFrame.setBusy(false);
-                Receipt.mount(charge,this.card,this.customer)
+                Receipt.mount(charge,this.card,this.customer);
             },500)
         }
+
         let navigator = new Navigator({
             selectedIndex : selectedIndex,
             theme      : 'dark',
@@ -105,7 +111,7 @@ export class Interface extends Component<any,any>{
                 align     : 'center',
                 component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (com) => {
 
-                    let { output : {client_secret} } = await Connector.getRoutes().gateway.intent({
+                    let { output : { client_secret } } = await Connector.getRoutes().gateway.intent({
                         "domain"   : this.getSettings().domain,
                         "amount"   : this.customer.amount,
                         "email"    : this.customer.email,
