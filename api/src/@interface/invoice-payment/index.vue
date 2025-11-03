@@ -1,5 +1,5 @@
 <script lang="ts">
-import {Interface} from "./index";
+import {Application} from "./index";
 import "./index.less"
 import {Frame} from "@hotfusion/ui";
 import {Connector} from '@hotfusion/ws/client/index.esm.js';
@@ -28,7 +28,7 @@ export default defineComponent({
   async mounted() {
     document.body.setAttribute('theme', 'dark');
     this.connector  = await Connector.connect(this.uri);
-    this._interface = new Interface({
+    this._interface = new Application({
       theme     : "dark",
       connector : this.connector,
       domain    : "digitaladsexp.com",

@@ -12,6 +12,5 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
-  },
-  "exclude": ["src/@interface/invoice-payment/index.ts"]
+  }
 }

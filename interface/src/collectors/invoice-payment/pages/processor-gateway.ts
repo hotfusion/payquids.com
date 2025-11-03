@@ -1,6 +1,5 @@
-import {Component, Frame, Input} from "@hotfusion/ui";
+import {Component, Frame, EventEmitter} from "@hotfusion/ui";
 import * as Stripe from "@stripe/stripe-js";
-import EventEmitter from "eventemitter3";
 interface IPaymentGatewaySettings {
     theme: string;
     branch : any

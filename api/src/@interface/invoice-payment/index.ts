@@ -17,7 +17,7 @@ interface IInterfaceSettings {
         amount  : number;
     }>
 }
-export class Interface extends Component<any,any>{
+export class Application extends Component<any,any>{
     customer:{name:string,email:string,amount:number,invoice:string,phone:string}
     card:any
     constructor(settings: IInterfaceSettings) {
@@ -32,6 +32,7 @@ export class Interface extends Component<any,any>{
             domain : this.getSettings().domain
         })).output;
 
+
         let branch
             = Utils.decodeJwt(session);
 
@@ -43,6 +44,7 @@ export class Interface extends Component<any,any>{
             let receiptTab                = navigator.getFrame().findBlockById('tab:receipt-tab');
             let goBackButtonFrame:Frame   = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
             let continueButtonFrame:Frame = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
 
             continueButtonFrame.setBusy(true);
             continueButtonFrame.getComponent<Button>().updateSettings({
