@@ -8,9 +8,16 @@ html,body {
       height: 40px  !important;
     }
   }
+  [ouid="note"] {
+    padding-left: 0 !important;
+    &:before {
+      display: none;
+    }
+  }
   [ouid="invoice-payment"]{
     align-items: center;
     justify-content: center;
+
     > [ouid="form"] {
       width: 400px !important;
       height: 560px !important;
@@ -190,6 +197,7 @@ html,body {
         }
       }
     }
+
     /* Animations */
     @keyframes fadeSlideIn {
       from {
@@ -201,7 +209,6 @@ html,body {
         transform: translateY(0);
       }
     }
-
     @keyframes fadeToHalf {
       from {
         opacity: 0;
@@ -212,7 +219,6 @@ html,body {
         transform: translateY(0);
       }
     }
-
     @keyframes popIn {
       0% {
         opacity: 0;
@@ -227,7 +233,6 @@ html,body {
         transform: translateY(0) scale(1);
       }
     }
-
     @keyframes glowIn {
       0% {
         opacity: 0;
@@ -245,7 +250,5 @@ html,body {
         transform: translateY(0) scale(1);
       }
     }
-
-
   }
 }

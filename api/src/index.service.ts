@@ -253,6 +253,5 @@ export default class Gateway extends Branches {
     async 'branch/:_bid'({},ctx){
         let html = this.ManagerBundle({theme : 'dark', uri : 'http://0.0.0.0:8890/gateway'});
         return ctx.html(html);
-
     }
 }

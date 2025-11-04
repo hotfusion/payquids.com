@@ -1,6 +1,7 @@
 <script lang="ts">
 import {Application} from "./index";
-import "./index.less"
+
+
 import {Frame} from "@hotfusion/ui";
 import {Connector} from '@hotfusion/ws/client/index.esm.js';
 import { defineComponent } from 'vue';
