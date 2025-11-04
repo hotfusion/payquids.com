@@ -1,5 +1,5 @@
 import {Authorization, Controller, REST} from "@hotfusion/ws"
-import {URIParser} from "@hotfusion/ws/utils/uri-parser"
+import {URIParser,Arguments} from "@hotfusion/ws/utils"
 import {ObjectId} from "mongodb";
 import type {ICustomer, ICustomerProcessorProfile} from "../index.schema";
 import {MongoClient} from "mongodb";
@@ -11,7 +11,8 @@ export class DB {
     protected source:{[key:string]: any} = {};
     @Controller.on("mounted")
     async mounted(){
-        let uri = 'mongodb://127.0.0.1:27017' //'mongodb://root:example@mongo:27017'
+        console.log('db',Arguments)
+        let uri = Arguments.db //'//mongodb://127.0.0.1:27017' //'mongodb://root:example@mongo:27017'
         //this.dbName = URIParser(uri).database;
         let connection  = new MongoClient(uri);
         let collections = [{
@@ -70,7 +71,6 @@ export class Customers extends  DB {
             _bid : new ObjectId(ctx.getParams()._bid)
         }).toArray();
     }
-
     @REST.post()
     @Authorization.protect()
     async ':_bid/customers/:_cid/update'(@REST.schema() customer:Pick<ICustomer, 'email' | 'name' | 'address' | 'phone'>, ctx:ICTX){
@@ -163,4 +163,5 @@ export class Customers extends  DB {
 
         return profile
     }
+
 }

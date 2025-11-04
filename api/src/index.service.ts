@@ -1,7 +1,7 @@
 import {Controller, REST, Bundler} from "@hotfusion/ws";
 import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
-import {JWT,Crypto} from "@hotfusion/ws/utils"
+import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
 import Stripe from "stripe";
 import paypal from "@paypal/checkout-server-sdk";
 import * as path from 'path'
@@ -18,7 +18,7 @@ export default class Gateway extends Branches {
     private ManagerBundle:any
 
     @Controller.on('mounted')
-    async 'gateway:mounted'() {
+    async 'gateway:mounted'(e) {
         this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/invoice-payment/index.vue')).build()).compile;
     }
     private async getBranchDocument(query:{domain:string}){
