@@ -5,6 +5,7 @@ import {Application} from "./index";
 import {Frame} from "@hotfusion/ui";
 import {Connector} from '@hotfusion/ws/client/index.esm.js';
 import { defineComponent } from 'vue';
+import "./index.less"
 export default defineComponent({
   props : {
     theme : {

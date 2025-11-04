@@ -2,7 +2,6 @@
   "name": "payquids.com",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "storybook": "npm --prefix ../../ui run clean && storybook dev -p 6008",
@@ -19,7 +18,8 @@
     "@storybook/manager-api": "^8.6.14",
     "less": "^4.4.0",
     "storybook": "^9.1.2",
-    "@vitejs/plugin-vue" : "^6.0.1"
+    "@vitejs/plugin-vue" : "^6.0.1",
+    "@storybook/addon-vitest": "^9.1.7"
   },
   "dependencies": {
     "@hotfusion/ui": "../../ui",
