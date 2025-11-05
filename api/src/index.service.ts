@@ -21,10 +21,8 @@ export default class Gateway extends Branches {
     @Controller.on('mounted')
     async 'gateway:mounted'(e) {
         const files = fs.readdirSync(path.resolve(__dirname,'./@interface/invoice-payment'));
-        console.log(files)
-        console.log('__dirname:',__dirname)
-        console.log(path.resolve('./@interface/invoice-payment/index.vue'))
-        this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/invoice-payment/index.vue')).build()).compile;
+
+        //this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/invoice-payment/index.vue')).build()).compile;
     }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
@@ -254,9 +252,19 @@ export default class Gateway extends Branches {
 
     }
 
+    @REST.html({
+        defaults  : ['index.vue'],
+        directory : path.resolve(__dirname, './@interface/invoice-payment')
+    })
+    'invoice/:domain'(settings:{theme : string, uri : string},ctx){
+        return {
+            theme : 'dark',
+            uri   : 'http://0.0.0.0:8890/gateway'
+        }
+    }
     @REST.get()
     async 'branch/:_bid'({},ctx){
-        let html = this.ManagerBundle({theme : 'dark', uri : 'http://0.0.0.0:8890/gateway'});
-        return ctx.html(html);
+        /*let html = this.ManagerBundle({theme : 'dark', uri : 'http://0.0.0.0:8890/gateway'});
+        return ctx.html(html);*/
     }
 }

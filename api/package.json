@@ -38,8 +38,8 @@
     "payq:deploy": "npm run payq:build -- --db=mongodb://root:example@mongo:27017&& sudo node ./node_modules/@hotfusion/ws/actions/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22 --db=mongodb://root:example@mongo:27017"
   },
   "dependencies": {
-    "@hotfusion/ws": "^0.0.124",
-    "@hotfusion/ui": "^2.0.2",
+    "@hotfusion/ws": "../../ws/engine/dist",
+    "@hotfusion/ui": "../../ui/dist",
     "@paypal/checkout-server-sdk": "^1.0.3",
     "@stripe/stripe-js": "^4.10.0",
     "@vitejs/plugin-vue": "^6.0.1",

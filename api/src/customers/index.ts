@@ -11,9 +11,7 @@ export class DB {
     protected source:{[key:string]: any} = {};
     @Controller.on("mounted")
     async mounted(){
-        console.log('db',Arguments)
-        let uri = Arguments.db //'//mongodb://127.0.0.1:27017' //'mongodb://root:example@mongo:27017'
-        //this.dbName = URIParser(uri).database;
+        let uri = Arguments.db;
         let connection  = new MongoClient(uri);
         let collections = [{
             name : 'customers'
