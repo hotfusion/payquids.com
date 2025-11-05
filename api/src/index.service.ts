@@ -5,6 +5,7 @@ import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
 import Stripe from "stripe";
 import paypal from "@paypal/checkout-server-sdk";
 import * as path from 'path'
+import * as fs from 'fs'
 //@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
 /*@Authorization.provider('local',{
     adapter : {
@@ -19,6 +20,9 @@ export default class Gateway extends Branches {
 
     @Controller.on('mounted')
     async 'gateway:mounted'(e) {
+        const files = fs.readdirSync(path.resolve(__dirname,'./@interface/invoice-payment'));
+        console.log(files)
+        console.log('__dirname:',__dirname)
         console.log(path.resolve('./@interface/invoice-payment/index.vue'))
         this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/invoice-payment/index.vue')).build()).compile;
     }

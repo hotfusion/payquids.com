@@ -3,54 +3,56 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "ws" : {
-    "port" : {
-      "main" : "8890"
+  "ws": {
+    "port": {
+      "main": "8890"
     },
     "include": [
       "**/*.vue",
       "**/*.less"
     ],
-    "ssl" : false,
+    "ssl": false,
     "environment": {
       "MONGO_URI": "mongodb://root:example@mongo:27017"
     },
-    "docker" : {
-      "services" : {
-        "mongo" : {
+    "docker": {
+      "services": {
+        "mongo": {
           "image": "mongo:7.0",
           "container_name": "mongo",
           "restart": "unless-stopped",
-          "environment":{
+          "environment": {
             "MONGO_INITDB_ROOT_USERNAME": "root",
             "MONGO_INITDB_ROOT_PASSWORD": "example"
           },
-          "ports":["27017:27017"]
+          "ports": [
+            "27017:27017"
+          ]
         }
       }
     }
   },
   "scripts": {
-    "payq:build"   : "sudo node node_modules/@hotfusion/ws/actions/_.build.js --dir=$PWD",
-    "payq:run"     : "npm run payq:build && sudo node node_modules/@hotfusion/ws/actions/_.run.js --dir=$PWD/dist --db=mongodb://127.0.0.1:27017",
-    "payq:deploy"  : "npm run payq:build -- --db=mongodb://root:example@mongo:27017&& sudo node ./node_modules/@hotfusion/ws/actions/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22 --db=mongodb://root:example@mongo:27017"
+    "payq:build": "sudo node node_modules/@hotfusion/ws/actions/_.build.js --dir=$PWD",
+    "payq:run": "npm run payq:build && sudo node node_modules/@hotfusion/ws/actions/_.run.js --dir=$PWD/dist --db=mongodb://127.0.0.1:27017",
+    "payq:deploy": "npm run payq:build -- --db=mongodb://root:example@mongo:27017&& sudo node ./node_modules/@hotfusion/ws/actions/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22 --db=mongodb://root:example@mongo:27017"
   },
   "dependencies": {
-    "@hotfusion/ws": "../../ws/engine/dist",
-    "stripe" : "^18.5.0",
-    "vite": "^7.1.5",
+    "@hotfusion/ws": "^0.0.124",
+    "@hotfusion/ui": "^2.0.2",
     "@paypal/checkout-server-sdk": "^1.0.3",
-    "@vitejs/plugin-vue" : "^6.0.1",
+    "@stripe/stripe-js": "^4.10.0",
+    "@vitejs/plugin-vue": "^6.0.1",
     "juice": "^11.0.1",
-    "puppeteer" : "^24.20.0",
-    "mongodb" : "^6.20.0",
-    "@hotfusion/ui": "../../ui/dist",
-    "@stripe/stripe-js": "^4.10.0"
+    "mongodb": "^6.20.0",
+    "puppeteer": "^24.20.0",
+    "stripe": "^18.5.0",
+    "vite": "^7.1.5"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
     "gulp": "^5.0.1",
-    "through2" : "^4.0.2",
-    "@vitejs/plugin-vue" : "^6.0.1"
+    "through2": "^4.0.2"
   },
   "private": true
 }
