@@ -1,6 +1,7 @@
 import {ClientInformation} from "./pages/client-information";
 import {ProcessorGateway} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
+//@ts-ignore
 import {Connector} from "@hotfusion/ws/client/index.esm.js";
 import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
 
