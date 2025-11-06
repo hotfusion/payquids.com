@@ -1,4 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,100..900;1,100..900&family=Lexend:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+.badge(@bg){
+  font-size: 12px;
+  font-weight: bold;
+  background-color: @bg;
+  color: var(--color-text);
+  font-family: "Elms Sans", sans-serif;
+  width: 20px;
+  height: 20px;
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 html,body {
+
   [component="input"] {
     [ouid="container"]{
       min-height: 40px  !important;
@@ -15,8 +31,9 @@ html,body {
   [ouid="invoice-payment"]{
     align-items: center;
     justify-content: center;
-
+    background-color: #1c1d1e !important;
     > [ouid="form"] {
+      border-radius: 3px;
       width: 400px !important;
       height: 560px !important;
       background-color: var(--color-bg);
@@ -25,6 +42,59 @@ html,body {
         border-radius: 4px;
         pointer-events: none;
         padding: 0 !important;
+        height: 50px !important;
+        min-height: 50px !important;
+        > :nth-child(1) {
+          [ouid="icon"]{
+            &:before {
+              content: "1";
+              .badge(var(--color-accent-opacity-light));
+            }
+          }
+          &[completed="true"]{
+            [ouid="icon"]{
+              &:before {
+                content: "✔";
+                .badge(var(--color-accent));
+              }
+            }
+          }
+        }
+        > :nth-child(2) {
+          [ouid="icon"]{
+            &:before {
+              content: "2";
+              .badge(var(--color-accent-opacity-light));
+            }
+          }
+          &[completed="true"]{
+            [ouid="icon"]{
+              &:before {
+                content: "✔";
+                .badge(var(--color-accent));
+              }
+            }
+          }
+        }
+        > :nth-child(3) {
+          [ouid="icon"]{
+            &:before {
+              content: "3";
+              .badge(var(--color-accent-opacity-light));
+            }
+          }
+          &[completed="true"]{
+            [ouid="icon"]{
+              &:before {
+                content: "✔";
+                .badge(var(--color-accent));
+              }
+            }
+            [ouid="label"]{
+              color: var(--color-text);
+            }
+          }
+        }
         > * {
           background-color: transparent !important;
           &:before{

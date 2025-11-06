@@ -32,6 +32,7 @@ export class Application extends Component<any,any>{
             domain : this.getSettings().domain
         })).output;
 
+        let goBackButtonFrame:Frame,continueButtonFrame:Frame,clientInformationTab:Frame,paymentGatewayTab:Frame,receiptTab:Frame
 
         let branch
             = Utils.decodeJwt(session);
@@ -170,42 +171,87 @@ export class Application extends Component<any,any>{
                 }),
             }]
         }).on('command:click', async (e) => {
-            if(selectedIndex === 1)
-                return;
 
-            let goBackButtonFrame:Frame
-                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
-
-            let continueButtonFrame:Frame
-                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
-
-            let paymentGatewayTab
-                = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
-
+            // SET BUSY IF NEXT CLICKED
             if(e.item.id === 'next')
                continueButtonFrame.setBusy(true);
 
+            // REDUCE INDEX IF LARGER THAN 0 AND ITEM CLICKED IS BACK
             if(e.item.id === 'back' && selectedIndex > 0)
                 selectedIndex--;
-
+            // INCREASE INDEX IF LESS THAN 0 AND ITEM CLICKED IS NEXT
             if(e.item.id === 'next' && selectedIndex < 2)
                 selectedIndex++;
 
-            goBackButtonFrame
-                .setDisabled(selectedIndex === 0)
 
-            if(selectedIndex === 1){
+            // DISABLE BACK BUTTON IS INDEX IS 0 OR 2
+            goBackButtonFrame
+                .setDisabled(selectedIndex === 0 || selectedIndex === 2)
+
+            if(selectedIndex === 0){
+                clientInformationTab
+                    .setDisabled(false).setAttribute('completed', 'false');
                 paymentGatewayTab
-                    .setDisabled(false);
+                    .setDisabled(true).setAttribute('completed', 'false');
+                receiptTab
+                    .setDisabled(true).setAttribute('completed', 'false');
 
                 continueButtonFrame
                     .setDisabled(true);
             }
 
+            if(selectedIndex === 1){
+                clientInformationTab
+                    .setDisabled(false).setAttribute('completed', 'true');
+                paymentGatewayTab
+                    .setDisabled(false).setAttribute('completed', 'false');
+                receiptTab
+                    .setDisabled(true).setAttribute('completed', 'false');
+            }
+
+            if(selectedIndex === 2){
+                clientInformationTab
+                    .setDisabled(false).setAttribute('completed', 'true');
+                paymentGatewayTab
+                    .setDisabled(false).setAttribute('completed', 'true');
+                receiptTab
+                    .setDisabled(false).setAttribute('completed', 'true');
+
+                continueButtonFrame
+                    .setDisabled(true);
+            }
+
+
             navigator.updateSettings({selectedIndex});
         }).on('index:changed', ({index}) => {
             selectedIndex = index;
-        });
+        }).on('mounted',() => {
+            // BUTTONS
+            goBackButtonFrame
+                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[0].getBlocks()[0];
+
+            continueButtonFrame
+                = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
+
+            // TABS
+             clientInformationTab
+                = navigator.getFrame().findBlockById('tab:client-information-tab');
+
+             paymentGatewayTab
+                = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
+
+             receiptTab
+                = navigator.getFrame().findBlockById('tab:receipt-tab');
+
+            clientInformationTab.setDisabled(false);
+            paymentGatewayTab.setDisabled(true);
+            setTimeout(() => {
+                console.log(paymentGatewayTab.isDisabled());
+            },100)
+            receiptTab.setDisabled(true);
+        })
+
+
 
         let form
             = new Frame('form',navigator);

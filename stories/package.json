@@ -22,7 +22,7 @@
     "@storybook/addon-vitest": "^9.1.7"
   },
   "dependencies": {
-    "@hotfusion/ui": "../../ui",
+    "@hotfusion/ui": "../../ui/dist",
     "@stripe/stripe-js": "^4.10.0",
     "eventemitter3": "^5.0.1",
     "qrcode": "^1.5.4"

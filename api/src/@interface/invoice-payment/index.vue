@@ -36,7 +36,7 @@ export default defineComponent({
       domain    : "digitaladsexp.com",
       client : {
         invoice : 'A10-000003',
-        amount  : 0,
+        amount  : 5,
         name    : 'Vadim Korolov',
         email   : 'korolov.vadim@gmail.com',
         phone   : '5149996659'
