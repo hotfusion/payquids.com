@@ -99,9 +99,8 @@ export class Application extends Component<any,any>{
                         = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
 
                     this.customer = client;
-                    paymentGatewayTab.setDisabled(!complete)
-                    continueButtonFrame.setDisabled(!complete)
-
+                    paymentGatewayTab.setDisabled(!complete);
+                    continueButtonFrame.setDisabled(!complete);
                 }),
             },{
                 id        : 'payment-gateway-tab',

@@ -96,7 +96,6 @@ class PayPalProcessor extends EventEmitter implements Processor {
 
     }
 }
-
 class StripeProcessor extends EventEmitter implements Processor  {
     stripe      : any
     elements    : any
@@ -205,6 +204,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
         }
     }
 }
+
 export class ProcessorGateway extends Component<any,any>{
     processor: Processor;
     constructor(private config: IPaymentGatewaySettings,private branch:any ) {

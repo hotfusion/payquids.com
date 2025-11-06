@@ -9,26 +9,26 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
-  test: {
-    projects: [
-      {
-        //assetsInclude: ['**/*.md'],
-        extends: true,
-        plugins: [
-          // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-          storybookTest({ configDir: path.join(dirname, '.storybook') }),
+    test: {
+        projects: [
+            {
+                //assetsInclude: ['**/*.md'],
+                extends: true,
+                plugins: [
+                    // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
+                    storybookTest({ configDir: path.join(dirname, '.storybook') }),
+                ],
+                test: {
+                    name: 'storybook',
+                    browser: {
+                        enabled: true,
+                        headless: true,
+                        provider: 'playwright',
+                        instances: [{ browser: 'chromium' }]
+                    },
+                    setupFiles: ['.storybook/vitest.setup.ts'],
+                },
+            },
         ],
-        test: {
-          name: 'storybook',
-          browser: {
-        enabled: true,
-        headless: true,
-        provider: 'playwright',
-        instances: [{ browser: 'chromium' }]
-      },
-          setupFiles: ['.storybook/vitest.setup.ts'],
-        },
-      },
-    ],
-  },
+    },
 });

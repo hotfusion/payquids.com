@@ -1,7 +1,7 @@
 <script lang="ts">
 import {Application} from "./index";
 
-
+//s
 import {Frame} from "@hotfusion/ui";
 import {Connector} from '@hotfusion/ws/client/index.esm.js';
 import { defineComponent } from 'vue';
@@ -35,8 +35,8 @@ export default defineComponent({
       connector : this.connector,
       domain    : "digitaladsexp.com",
       client : {
-        invoice : 'A10-000001',
-        amount  : 20,
+        invoice : 'A10-000003',
+        amount  : 0,
         name    : 'Vadim Korolov',
         email   : 'korolov.vadim@gmail.com',
         phone   : '5149996659'

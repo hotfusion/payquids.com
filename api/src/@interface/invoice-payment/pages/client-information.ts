@@ -2,6 +2,8 @@ import {Component, Frame, Input} from "@hotfusion/ui";
 interface IClientInformationSettings {
     theme: string;
 }
+
+//
 export class ClientInformation extends Component<any,any>{
     constructor(settings:IClientInformationSettings) {
         super(settings,{
@@ -14,6 +16,7 @@ export class ClientInformation extends Component<any,any>{
 
     form !: any
     async mount(frame: Frame): Promise<this> {
+
         let validate = () => {
             setTimeout(() => {
                 let invoice = this.form.invoice.getComponent().getValue()
@@ -34,44 +37,43 @@ export class ClientInformation extends Component<any,any>{
                 theme,
                 label       : 'Invoice number',
                 value       : client?.invoice,
-                placeholder : 'A01-0000000',
+                placeholder : 'A01-0000003',
                 notes       : [{
                     note      : 'If you don’t have the invoice number, please provide the email address associated with your invoice.',
                     clickable : false
                 }]
-            }).on('input',validate)
-              .on('mounted', validate)),
+            }).on('input',validate).on('mounted', validate)),
             amount : new Frame('amount-input', new Input({
                 theme,
-                placeholder : '$0.00',
+                placeholder : '$0.02',
                 value       : client?.amount,
+                icon        : {
+                   class : 'fa-solid fa-dollar-sign',
+                    position : 'left'
+                },
                 notes       : [{
-                    note      : 'Enter the amount which is on your invoice.',
+                    note      : 'Enter the amount which is on your invoice. 1',
                     clickable : false
                 }]
-            }).on('input',validate)
-              .on('mounted', validate)),
+            }).on('input',validate).on('mounted', validate)),
             name  : new Frame('client-name-input', new Input({
                 theme,
                 value       : client?.name,
                 label       : 'Full Name',
                 placeholder : 'Andrew Patel'
-            }).on('input',validate)
-              .on('mounted', validate)),
+            }).on('input',validate).on('mounted', validate)),
             email : new Frame('client-email-input', new Input({
                 theme,
                 value       : client?.email,
                 label       : 'Email Address',
                 placeholder : 'andrew.patel@email.com'
-            }).on('input',validate)
-              .on('mounted', validate)),
+            }).on('input',validate).on('mounted', validate)),
             phone : new Frame('client-phone-input', new Input({
                 theme,
                 value       : client?.phone,
                 label       : 'Phone Number',
                 placeholder : '111 111-11111'
-            }).on('input',validate)
-                .on('mounted', validate))
+            }).on('input',validate).on('mounted', validate))
         }
 
         await frame.setOrientation('horizontal').push(this.form.invoice, this.form.amount,this.form.name,this.form.email, this.form.phone);
