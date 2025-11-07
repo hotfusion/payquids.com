@@ -13,7 +13,11 @@ import * as fs from 'fs'
     }
 })*/
 
+const dirname = __dirname;
 
+console.log(dirname);
+console.log(process.env)
+console.log(__filename);
 export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
     private ManagerBundle:any
@@ -254,7 +258,7 @@ export default class Gateway extends Branches {
 
     @REST.html({
         defaults  : ['index.vue'],
-        directory : path.resolve(__dirname, './@interface/invoice-payment')
+        directory : path.resolve(process.env.PWD || __dirname, './@interface/invoice-payment')
     })
     '@invoice/:domain'(settings:{theme : string, uri : string},ctx){
         return {
