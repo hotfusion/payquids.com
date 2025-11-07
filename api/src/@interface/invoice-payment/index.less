@@ -1,12 +1,15 @@
+/*
 @import url('https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,100..900;1,100..900&family=Lexend:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+*/
+
 .badge(@bg){
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   background-color: @bg;
   color: var(--color-text);
-  font-family: "Elms Sans", sans-serif;
-  width: 20px;
-  height: 20px;
+  font-family: Elms Sans, sans-serif;
+  width: 18px;
+  height: 18px;
   border-radius: 100%;
   display: flex;
   align-items: center;
@@ -33,10 +36,12 @@ html,body {
     justify-content: center;
     background-color: #1c1d1e !important;
     > [ouid="form"] {
-      border-radius: 3px;
+
       width: 400px !important;
       height: 560px !important;
       background-color: var(--color-bg);
+      border-radius: 4px;
+      overflow: hidden;
       > [ouid="tabs"]{
         background-color: var(--color-bg);
         border-radius: 4px;
@@ -48,14 +53,22 @@ html,body {
           [ouid="icon"]{
             &:before {
               content: "1";
-              .badge(var(--color-accent-opacity-light));
+              .badge(transparent);
+            }
+          }
+          &[selected="true"]{
+            [ouid="icon"]{
+              &:before {
+                content: "1";
+                .badge(var(--color-accent));
+              }
             }
           }
           &[completed="true"]{
             [ouid="icon"]{
               &:before {
                 content: "✔";
-                .badge(var(--color-accent));
+                .badge(var(--color-accent))
               }
             }
           }
@@ -64,7 +77,15 @@ html,body {
           [ouid="icon"]{
             &:before {
               content: "2";
-              .badge(var(--color-accent-opacity-light));
+              .badge(transparent);
+            }
+          }
+          &[selected="true"]{
+            [ouid="icon"]{
+              &:before {
+                content: "2";
+                .badge(var(--color-accent));
+              }
             }
           }
           &[completed="true"]{
@@ -80,7 +101,7 @@ html,body {
           [ouid="icon"]{
             &:before {
               content: "3";
-              .badge(var(--color-accent-opacity-light));
+              .badge(transparent);
             }
           }
           &[completed="true"]{
@@ -264,6 +285,14 @@ html,body {
       }
     }
 
+    [ouid="toolbar-item"]{
+      &[component="button"]{
+        width: 120px !important;
+        [ouid="label"]{
+          justify-content: center;
+        }
+      }
+    }
     /* Animations */
     @keyframes fadeSlideIn {
       from {

@@ -256,15 +256,10 @@ export default class Gateway extends Branches {
         defaults  : ['index.vue'],
         directory : path.resolve(__dirname, './@interface/invoice-payment')
     })
-    'invoice/:domain'(settings:{theme : string, uri : string},ctx){
+    '@invoice/:domain'(settings:{theme : string, uri : string},ctx){
         return {
             theme : 'dark',
             uri   : 'http://0.0.0.0:8890/gateway'
         }
-    }
-    @REST.get()
-    async 'branch/:_bid'({},ctx){
-        /*let html = this.ManagerBundle({theme : 'dark', uri : 'http://0.0.0.0:8890/gateway'});
-        return ctx.html(html);*/
     }
 }

@@ -75,15 +75,20 @@ export class Application extends Component<any,any>{
                 theme    : 'dark',
                 disabled : true,
                 icon     : {
-                    class : 'ri-arrow-drop-right-line'
+                    class : 'ri-arrow-drop-right-line',
+                    position : 'right'
                 }
             },{
                 id       : 'back',
                 type     : 'button',
-                label    : 'Go Back',
+                label    : 'Return',
                 position : 'left-bottom',
                 theme    : 'dark',
-                disabled : true
+                disabled : true,
+                icon     : {
+                    class : 'ri-arrow-drop-left-line',
+                    position : 'left'
+                }
             }],
             components : [{
                 id        : 'client-information-tab',
@@ -143,12 +148,20 @@ export class Application extends Component<any,any>{
                             if(charge.output.completed)
                                 this.card = charge.output.card
 
-                            selectedIndex++;
-                            navigator.updateSettings({
-                                selectedIndex
-                            });
+                            clientInformationTab
+                                .setDisabled(false).setAttribute('completed', 'true');
+                            paymentGatewayTab
+                                .setDisabled(false).setAttribute('completed', 'true');
+                            receiptTab
+                                .setDisabled(false).setAttribute('completed', 'true');
+
+                            selectedIndex = 2;
+                            navigator.updateSettings({selectedIndex:2});
                         }
+
+                        continueButtonFrame.setBusy(false);
                     });
+                    goBackButtonFrame.setVisible(true);
 
                 }).on('change', ({complete}) => {
                     let continueButtonFrame:Frame
@@ -165,10 +178,7 @@ export class Application extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () => new Receipt(this.getSettings() as any).on('mounted',(component) => {
-                    if(selectedIndex === 2)
-                        completionMode();
-                }),
+                component : () => new Receipt(this.getSettings() as any).on('mounted',completionMode),
             }]
         }).on('command:click', async (e) => {
 
@@ -196,6 +206,8 @@ export class Application extends Component<any,any>{
                 receiptTab
                     .setDisabled(true).setAttribute('completed', 'false');
 
+                goBackButtonFrame
+                    .setVisible(false);
                 continueButtonFrame
                     .setDisabled(true);
             }
@@ -222,9 +234,11 @@ export class Application extends Component<any,any>{
             }
 
 
-            navigator.updateSettings({selectedIndex});
+            if(selectedIndex < 2 || e.item.id === 'back')
+               navigator.updateSettings({selectedIndex});
+
         }).on('index:changed', ({index}) => {
-            selectedIndex = index;
+            //selectedIndex = index;
         }).on('mounted',() => {
             // BUTTONS
             goBackButtonFrame
@@ -245,10 +259,8 @@ export class Application extends Component<any,any>{
 
             clientInformationTab.setDisabled(false);
             paymentGatewayTab.setDisabled(true);
-            setTimeout(() => {
-                console.log(paymentGatewayTab.isDisabled());
-            },100)
             receiptTab.setDisabled(true);
+            goBackButtonFrame.setVisible(false);
         })
 
 

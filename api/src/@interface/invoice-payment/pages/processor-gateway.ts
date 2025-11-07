@@ -213,7 +213,6 @@ export class ProcessorGateway extends Component<any,any>{
     async init(public_key:string,client_secret:string,client_token?:string) {
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
-
             let Processor
                 = this.branch.gateway === 'stripe'? StripeProcessor : PayPalProcessor
 
