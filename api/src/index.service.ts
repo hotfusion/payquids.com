@@ -20,11 +20,6 @@ export default class Gateway extends Branches {
             uri   : 'http://0.0.0.0:8890/gateway'
         }
     }
-
-    @Controller.on('mounted')
-    async 'gateway:mounted'(e) {
-
-    }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
         let processors = await this.source.processors.find({
@@ -252,5 +247,4 @@ export default class Gateway extends Branches {
         }
 
     }
-
 }

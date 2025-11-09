@@ -5,7 +5,7 @@
   "main": "index.js",
   "ws": {
     "port": {
-      "main": "8890"
+      "main": "8700"
     },
     "include": [
       "**/*.vue",
