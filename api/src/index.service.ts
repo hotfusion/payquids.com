@@ -1,32 +1,29 @@
 import {Controller, REST, Bundler} from "@hotfusion/ws";
-import {IBranch, IProcessor, ICollections, IPagination, IGatewayIntent} from "./index.schema";
+import {IBranch, IProcessor, IGatewayIntent} from "./index.schema";
 import {Branches} from "./branches";
 import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
 import Stripe from "stripe";
 import paypal from "@paypal/checkout-server-sdk";
-import * as path from 'path'
-import * as fs from 'fs'
-//@Mongo.connect<ICollections>("mongodb://localhost:27017/payquids", ['processors','branches','customers','receipts','invoices','cards'])
-/*@Authorization.provider('local',{
-    adapter : {
-        uri : 'mongodb://localhost:27017/payquids'
-    }
-})*/
+import * as path from "node:path";
 
-const dirname = __dirname;
 
-console.log(dirname);
-console.log(process.env)
-console.log(__filename);
 export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
-    private ManagerBundle:any
+
+    @REST.html({
+        defaults  : ['index.vue'],
+        directory : 'src/@interface/invoice-payment'
+    })
+    '@invoice/:domain'(settings:{theme : string, uri : string},ctx){
+        return {
+            theme : 'dark',
+            uri   : 'http://0.0.0.0:8890/gateway'
+        }
+    }
 
     @Controller.on('mounted')
     async 'gateway:mounted'(e) {
-        const files = fs.readdirSync(path.resolve(__dirname,'./@interface/invoice-payment'));
 
-        //this.ManagerBundle = (await new Bundler(path.resolve(__dirname, './@interface/invoice-payment/index.vue')).build()).compile;
     }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
@@ -256,14 +253,4 @@ export default class Gateway extends Branches {
 
     }
 
-    @REST.html({
-        defaults  : ['index.vue'],
-        directory : path.resolve(process.env.PWD || __dirname, './@interface/invoice-payment')
-    })
-    '@invoice/:domain'(settings:{theme : string, uri : string},ctx){
-        return {
-            theme : 'dark',
-            uri   : 'http://0.0.0.0:8890/gateway'
-        }
-    }
 }

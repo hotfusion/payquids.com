@@ -1,5 +1,5 @@
 import {Component, Frame, Input} from "@hotfusion/ui";
-import * as QRCode from  "qrcode"
+
 interface IReceiptSettings {
     theme: string;
 }

@@ -35,7 +35,7 @@
   "scripts": {
     "payq:build": "sudo node node_modules/@hotfusion/ws/actions/_.build.js --dir=$PWD",
     "payq:run": "npm run payq:build && sudo node node_modules/@hotfusion/ws/actions/_.run.js --dir=$PWD/dist --db=mongodb://127.0.0.1:27017",
-    "payq:deploy": "npm run payq:build -- --db=mongodb://root:example@mongo:27017&& sudo node ./node_modules/@hotfusion/ws/actions/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22 --db=mongodb://root:example@mongo:27017"
+    "payq:deploy": "npm run payq:build -- --db=mongodb://root:example@mongo:27017 && sudo node ./node_modules/@hotfusion/ws/actions/_.deploy.js --dir=$PWD/dist --host=204.12.203.220 --username=administrator --password=!B1mujx22 --db=mongodb://root:example@mongo:27017"
   },
   "dependencies": {
     "@hotfusion/ws": "../../ws/engine/dist",
