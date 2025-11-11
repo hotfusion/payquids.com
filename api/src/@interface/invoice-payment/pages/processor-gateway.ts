@@ -30,7 +30,7 @@ class PayPalProcessor extends EventEmitter implements Processor {
 
     async mount(dom:HTMLElement): Promise<this> {
         let form = new Frame('form').setOrientation('horizontal').setWidth('100%').setStyle({gap:'10px'});
-        form.setHTML(`<div id="card-number"></div><div id="card-cvv"></div><div id="card-expiry"></div>`);
+        form.setHTML(`<label for="card-number">Card Number:</label><div id="card-number"></div><label for="card-cvv">Security Code:</label><div id="card-cvv"></div><label for="card-expiry">Expiration date:</label><div id="card-expiry"></div>`);
         form.on('mounted', () => {
             let script = document.createElement('script');
             script.src = `https://www.paypal.com/sdk/js?client-id=${this.public_key}&components=card-fields&intent=capture&currency=USD`;
@@ -52,8 +52,10 @@ class PayPalProcessor extends EventEmitter implements Processor {
                             'font-size': '12px',
                             'color': getRootStyle('--color-text'),
                             'border' :  'solid 1px ' + getRootStyle('--color-border'),
-                            'padding': '5px 10px',
-                            'background': getRootStyle('--color-bg-secondary'),
+                            'height': '35px',
+                            margin :'0',
+                            padding :'0 0 0 10px',
+                            'background': getRootStyle('--color-bg'),
                             'outline': 'none',
                             borderRadius :'0px'
                         },
@@ -83,7 +85,7 @@ class PayPalProcessor extends EventEmitter implements Processor {
                     },
                 })
 
-                await this.cardFields.NumberField().render('#card-number')
+                await this.cardFields.NumberField({ placeholder: '1234 5678 9012 3456' }).render('#card-number')
                 await this.cardFields.ExpiryField().render('#card-expiry')
                 await this.cardFields.CVVField().render('#card-cvv');
 
