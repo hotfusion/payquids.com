@@ -35,32 +35,6 @@ export class Processors extends Invoice {
                         new sandbox(processor.keys[modes[i]].public, processor.keys[modes[i]].secret)
                     );
 
-                    const request = new paypal.orders.OrdersCreateRequest();
-                    request.prefer("return=representation");
-                    request.requestBody({
-                        intent: "CAPTURE",
-                        purchase_units: [
-                            {
-                                amount: {
-                                    currency_code: "USD",
-                                    value: "0.01" // Minimal amount to avoid real charges
-                                }
-                            }
-                        ],
-                        payment_source: {
-                            card: {
-                                number: "4111111111111111", // DO NOT use real card numbers; use a test card or vaulted card token
-                                expiry: "2026-12",
-                                cvv: "123",
-                                name: "Test User"
-                            }
-                        }
-                    });
-
-                    console.log('create order',modes[i],processor.keys[modes[i]])
-                    const response = await client.execute(request);
-                    console.log("Order created successfully:", response.result);
-
                 }
         }
         //

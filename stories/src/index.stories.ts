@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     args : {
         theme  : 'dark',
-        uri    : "http://0.0.0.0:8700/gateway",
+        uri    : "http://204.12.203.220:8700/gateway",
         domain :"digitaladsexp.com",
         amount : 2,
         invoice : '453434',
