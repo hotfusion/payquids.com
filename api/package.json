@@ -27,6 +27,9 @@
           },
           "ports": [
             "27017:27017"
+          ],
+          "volumes" : [
+            "/home/administrator/shared/mongo:/data/db"
           ]
         }
       }

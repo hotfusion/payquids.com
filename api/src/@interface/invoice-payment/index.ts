@@ -9,12 +9,12 @@ interface IInterfaceSettings {
     theme     : string;
     domain    : string;
     connector : Connector
+    invoice   : string;
+    amount    : number;
     client   ?: Partial<{
         name    : string;
         email   : string;
         phone   : string;
-        invoice : string;
-        amount  : number;
     }>
 }
 export class Application extends Component<any,any>{
@@ -24,7 +24,9 @@ export class Application extends Component<any,any>{
         super(settings || {},{
             theme  : 'default',
             domain : '',
-            client : false
+            client : false,
+            amount : 0,
+            invoice : false
         });
     }
     async mount(frame: Frame) : Promise<this> {
@@ -37,6 +39,7 @@ export class Application extends Component<any,any>{
         let branch
             = Utils.decodeJwt(session);
 
+        console.log('branch:',branch);
         let selectedIndex = 0,
             charge:{amount:0, currency:'USD'};
 

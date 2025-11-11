@@ -15,6 +15,19 @@ export default defineComponent({
     },
     uri : {
       type : String
+    },
+    client : {
+      type : Object,
+      default : () => ({})
+    },
+    domain : {
+      type : String
+    },
+    amount : {
+      type : Number
+    },
+    invoice : {
+      type : String
     }
   },
   data() {
@@ -30,18 +43,23 @@ export default defineComponent({
   async mounted() {
     document.body.setAttribute('theme', 'dark');
     this.connector  = await Connector.connect(this.uri);
+
+    if(!this?.domain)
+      return alert('Domain name is missing')
+
     this._interface = new Application({
       theme     : "dark",
       connector : this.connector,
-      domain    : "digitaladsexp.com",
-      client : {
-        invoice : 'A10-000003',
-        amount  : 5,
-        name    : 'Vadim Korolov',
-        email   : 'korolov.vadim@gmail.com',
-        phone   : '5149996659'
+      domain    : this.domain,
+      amount    : this.amount,
+      invoice   : this.invoice,
+      client    : {
+        name    : this?.client?.name,
+        email   : this?.client?.email,
+        phone   : this?.client?.phone
       }
     })
+
     await new Frame('invoice-payment', this._interface)
         .setWidth('100%')
         .mount(undefined,this.$el.parentElement)

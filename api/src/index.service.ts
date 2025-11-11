@@ -15,21 +15,33 @@ export default class Gateway extends Branches {
         directory : 'src/@interface/invoice-payment'
     })
     '@invoice/:domain'(settings:{theme : string, uri : string},ctx){
+        /*console.log('network:',ctx.getNetwork());
+        console.log('headers:',ctx.getHeaders());
+        console.log('ip:',ctx.getIp());*/
+
         return {
-            theme : 'dark',
-            uri   : 'http://0.0.0.0:8890/gateway'
+            theme  : 'dark',
+            uri    : `${ctx.getHeaders()['x-forwarded-proto'] || 'http'}://${ctx.getHeaders().host}/gateway`,
+            domain : ctx.getParams().domain
         }
     }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
+        if(!branch)
+            return null;
+
         let processors = await this.source.processors.find({
-            _bid : branch._id
+            _bid : branch?._id
         }).toArray() as IProcessor[];
         branch.processors = processors;
         return branch
     }
     @REST.get()
     async 'gateway/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >,ctx){
+
+        let host = ctx.getHeaders().host
+        let isDev = ctx.getNetwork().ips.local.find(x => host.split(':')[0]) !== undefined
+
         let document
             = await this.getBranchDocument(branch);
 
@@ -42,18 +54,19 @@ export default class Gateway extends Branches {
         let def = document.processors.find(x => x.default) || document.processors[0];
 
         let processor = await this.source.processors.findOne({
-            _id : def._id
+            _id : def?._id
         }) as IProcessor | null;
 
         if(!processor)
             throw new Error("processor was not found");
 
         let session = JWT.sign({
-            gateway  : processor.gateway,
-            domain   : document.domain,
-            mode     : document.mode,
-            created  : Date.now(),
-            keys     : {
+            gateway   : processor.gateway,
+            domain    : document.domain,
+            mode      : isDev ? 'development' : document.mode,
+            processor : isDev ? processor     : undefined,
+            created   : Date.now(),
+            keys      : {
                 public : processor.keys[document.mode].public,
             }
         },this.SECRET)
@@ -144,7 +157,7 @@ export default class Gateway extends Branches {
         }
     }
     @REST.get()
-    async 'gateway/intent'(@REST.schema() intent:IGatewayIntent){
+    async 'gateway/intent'(@REST.schema() intent:IGatewayIntent,ctx){
         let branch
                = await this.getBranchDocument(intent);
 
@@ -194,8 +207,10 @@ export default class Gateway extends Branches {
                 automatic_payment_methods: {
                     enabled: true,
                 },
-                metadata: {
-                    customer_ip: '0.0.0.0'
+                metadata : {
+                    customer_ip : ctx.getIp(),
+                    server_ip   : ctx.getNetwork().ips.public,
+                    host        : ctx.getHeaders().host
                 }
             })).client_secret;
 

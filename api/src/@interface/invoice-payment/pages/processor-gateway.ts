@@ -157,7 +157,9 @@ class StripeProcessor extends EventEmitter implements Processor  {
         this.card = this.elements.create(this.isRecurring?"card":"payment", {
             layout: "tabs",
             wallets: {
-                link: 'never' // 🚫 disables the email + save info block
+                applePay: 'never',
+                googlePay: 'never',
+                link: 'never',
             },
             style : {
                 base: {

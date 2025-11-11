@@ -31,28 +31,28 @@ export class ClientInformation extends Component<any,any>{
         }
 
         frame.setStyle({gap:'10px'});
-        let {theme,client} = this.getSettings()
+        let {theme,client,invoice,amount} = this.getSettings()
         this.form = {
             invoice : new Frame('invoice-input', new Input({
                 theme,
                 label       : 'Invoice number',
-                value       : client?.invoice,
+                value       : invoice,
                 placeholder : 'A01-0000003',
-                notes       : [{
+                /*notes       : [{
                     note      : 'If you don’t have the invoice number, please provide the email address associated with your invoice.',
                     clickable : false
-                }]
+                }]*/
             }).on('input',validate).on('mounted', validate)),
             amount : new Frame('amount-input', new Input({
                 theme,
-                placeholder : '$0.02',
-                value       : client?.amount,
+                placeholder : '$0.00',
+                value       : amount,
                 icon        : {
                    class : 'fa-solid fa-dollar-sign',
                     position : 'left'
                 },
                 notes       : [{
-                    note      : 'Enter the amount which is on your invoice. 1',
+                    note      : 'Enter the amount which is on your invoice',
                     clickable : false
                 }]
             }).on('input',validate).on('mounted', validate)),
