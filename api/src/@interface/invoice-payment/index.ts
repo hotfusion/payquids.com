@@ -132,7 +132,7 @@ export class Application extends Component<any,any>{
                         "scope"    : "invoice",
                     });
 
-                    await com.init(branch.keys.public, client_secret);
+                    await com.init(this.customer.amount,branch.keys.public, client_secret);
 
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];

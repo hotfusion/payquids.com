@@ -137,17 +137,80 @@ export default class Gateway extends Branches {
         }
 
         if(processor.gateway === "paypal"){
+            let corebox = branch.mode === 'development' ? paypal.core.SandboxEnvironment : paypal.core.LiveEnvironment
             let client = new paypal.core.PayPalHttpClient(
-                new paypal.core.SandboxEnvironment(
+                new corebox(
                     processor.keys[branch.mode].public,
                     processor.keys[branch.mode].secret
                 )
             );
+
+            function calculateTotalAndGetCustomIds(order: any ) {
+                let total = 0;
+                const customIds: string[] = [];
+
+                for (const unit of order.purchase_units) {
+                    if (unit.payments?.captures) {
+                        for (const capture of unit.payments.captures) {
+                            total += parseFloat(capture.amount.value);
+                            if (capture.custom_id) customIds.push(capture.custom_id);
+                        }
+                    }
+                }
+
+                return {
+                    amount : total,
+                    email  : customIds[0]
+                };
+            }
+
             const request = new paypal.orders.OrdersCaptureRequest(charge.id);
             request.requestBody({}); // required by SDK even if empty
             const response = await client.execute(request);
             // return the whole result or selected fields
-            console.log(response);
+            let {amount,email}
+                = calculateTotalAndGetCustomIds(response.result);
+
+            let customer = await this.source.customers.findOne({
+                email
+            });
+
+            let {last_digits,brand,expiry}
+                = response.result.payment_source.card || {};
+
+            if(last_digits)
+                await this.source.cards.updateOne({
+                    _cid  : customer._id,
+                    last4 : last_digits
+                }, {
+                    $set: {
+                        country   : null,
+                        brand     : brand,
+                        exp_month : expiry.split('-').pop(),
+                        exp_year  : expiry.split('-').shift()
+                    }
+                }, {upsert : true});
+
+            card = await this.source.cards.findOne({
+                _cid  : customer._id,
+                last4 : last_digits
+            });
+
+            await this.source.receipts.insertOne({
+                _bid     : branch._id,
+                _pid     : processor._id,
+                _cid     : customer._id,
+                domain   : charge.domain,
+                amount   : amount,
+                created  : new Date().valueOf(),
+                card     : card._id,
+                profile  : {
+                    id : null
+                }
+            });
+            intent = {
+                status: 'succeeded'
+            }
         }
 
         return {
@@ -252,6 +315,7 @@ export default class Gateway extends Branches {
                                 currency_code : 'USD',
                                 value         : intent.amount
                             },
+                            custom_id : intent.email
                         }
                     ]
                 });

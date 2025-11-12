@@ -14,18 +14,15 @@ declare const paypal:any;
 
 class PayPalProcessor extends EventEmitter implements Processor {
     private cardFields:any
-    constructor(private public_key:string, private client_secret:string) {
+    constructor(private amount:number, private public_key:string, private client_secret:string) {
         super();
     }
     async charge(): Promise<{intent:any,amount:number,error:any}> {
-
-        const result = await this.cardFields.submit();
-
-        return {
-            error  : null,
-            intent : false,
-            amount : 0,
-        }
+        return new Promise(async (resolve, reject) => {
+            (<any>this)._complete = resolve;
+            (<any>this)._reject   = reject;
+            return await this.cardFields.submit();
+        })
     }
 
     async mount(dom:HTMLElement): Promise<this> {
@@ -38,26 +35,35 @@ class PayPalProcessor extends EventEmitter implements Processor {
                 let getRootStyle = (style:string) => {
                     return getComputedStyle(document.body).getPropertyValue(style).trim()
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000));
+
                 this.cardFields = paypal.CardFields({
                     createOrder: async () => {
                         return this.client_secret;
                     },
-                    onApprove: () => {
-
+                    onApprove: ({orderID}) => {
+                        (<any>this)._complete({
+                            error  : null,
+                            intent : {
+                                id : orderID,
+                                processor: 'paypal'
+                            },
+                            amount : this.amount,
+                        });
                     },
-                    onError: () => {},
+                    onError: (e) => {
+                        (<any>this)._reject(e)
+                    },
                     style: {
                         'input': {
                             'font-size': '12px',
                             'color': getRootStyle('--color-text'),
                             'border' :  'solid 1px ' + getRootStyle('--color-border'),
                             'height': '35px',
-                            margin :'0',
-                            padding :'0 0 0 10px',
+                            'margin' :'0',
+                            'padding' :'0 0 0 10px',
                             'background': getRootStyle('--color-bg'),
                             'outline': 'none',
-                            borderRadius :'0px'
+                            'borderRadius' :'0px'
                         },
                         'input:focus': {
                             'outline'      : 'none',
@@ -69,13 +75,13 @@ class PayPalProcessor extends EventEmitter implements Processor {
                         },
                         '.valid': {
                             'color'  : getRootStyle('--color-text'),
-                            'border' : 'solid 1px ' + getRootStyle('--color-bg'),
+                            'border' : 'solid 1px ' + getRootStyle('--color-border'),
                         },
                         '.invalid': {
                             'outline'    : 'none',
                             'box-shadow' : 'none',
-                            'border'     : 'solid 1px ' + getRootStyle('--color-border-exception'),
-                            'color'      : getRootStyle('--color-border-exception')
+                            'border'     : 'solid 1px ' + getRootStyle('--color-border'),
+                            'color'      : getRootStyle('--color-border-accent')
                         }
                     },
                     inputEvents: {
@@ -89,7 +95,7 @@ class PayPalProcessor extends EventEmitter implements Processor {
                 await this.cardFields.ExpiryField().render('#card-expiry')
                 await this.cardFields.CVVField().render('#card-cvv');
 
-                this.emit('mounted',this)
+                this.emit('mounted',this);
             }
             document.body.appendChild(script);
         })
@@ -106,7 +112,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
     isRecurring : boolean = false
     isFocus     : boolean = false
 
-    constructor(private public_key:string, private client_secret:string) {
+    constructor(private amount:number, private public_key:string, private client_secret:string) {
         super();
     }
     async mount(dom:HTMLElement) {
@@ -214,13 +220,13 @@ export class ProcessorGateway extends Component<any,any>{
     constructor(private config: IPaymentGatewaySettings,private branch:any ) {
         super({},{});
     }
-    async init(public_key:string,client_secret:string,client_token?:string) {
+    async init(amount:number,public_key:string,client_secret:string) {
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
             let Processor
                 = this.branch.gateway === 'stripe'? StripeProcessor : PayPalProcessor
 
-            return this.processor = (await new Processor(public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
+            return this.processor = (await new Processor(amount, public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", () => {
                 resolve(true)
                 this.getFrame().setStyle({opacity:1});
             }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
