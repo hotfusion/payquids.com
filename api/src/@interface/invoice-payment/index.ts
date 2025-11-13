@@ -4,6 +4,7 @@ import {Receipt} from "./pages/receipt";
 //@ts-ignore
 import {Connector} from "@hotfusion/ws/client/index.esm.js";
 import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
+import {XBranchMeta} from "../../index.schema";
 
 interface IInterfaceSettings {
     theme     : string;
@@ -30,18 +31,21 @@ export class Application extends Component<any,any>{
         });
     }
     async mount(frame: Frame) : Promise<this> {
-        let session = (await Connector.getRoutes().gateway.metadata({
+        let meta = (await Connector.getRoutes().meta({
             domain : this.getSettings().domain
         })).output;
 
-        let goBackButtonFrame:Frame,continueButtonFrame:Frame,clientInformationTab:Frame,paymentGatewayTab:Frame,receiptTab:Frame
 
-        let branch
-            = Utils.decodeJwt(session);
+        let goBackButtonFrame:Frame,
+            continueButtonFrame:Frame,
+            clientInformationTab:Frame,
+            paymentGatewayTab:Frame,
+            receiptTab:Frame
 
-        console.log('branch:',branch);
-        let selectedIndex = 0,
-            charge:{amount:0, currency:'USD'};
+        let branch:XBranchMeta
+            = Utils.decodeJwt(meta);
+
+        let selectedIndex = 0, charge:{amount:number, currency:string | boolean,intent:any,error:any };
 
         let completionMode = () => {
             let paymentGatewayTab         = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
@@ -119,9 +123,9 @@ export class Application extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (com) => {
+                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (component:ProcessorGateway) => {
 
-                    let { output : { client_secret } } = await Connector.getRoutes().gateway.intent({
+                    let { output : { client_secret } } = await Connector.getRoutes().intent({
                         "domain"   : this.getSettings().domain,
                         "amount"   : this.customer.amount,
                         "email"    : this.customer.email,
@@ -132,7 +136,8 @@ export class Application extends Component<any,any>{
                         "scope"    : "invoice",
                     });
 
-                    await com.init(this.customer.amount,branch.keys.public, client_secret);
+
+                    await component.init(this.customer.amount,branch.keys.public, client_secret,branch.hosted);
 
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
@@ -140,12 +145,14 @@ export class Application extends Component<any,any>{
                     continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
                         continueButtonFrame.setBusy(true);
 
-                        let { error,intent }  = charge = await com.charge()
+                        let { error,intent } = charge = await component.charge()
 
                         if(!error){
-                            let charge = await Connector.getRoutes().gateway.charge({
+                            let charge = await Connector.getRoutes().charge({
                                 domain : this.getSettings().domain,
-                                id     : intent.id
+                                id     : intent.id,
+                                email  : this.customer.email,
+                                type   : 'processor'
                             });
 
                             if(charge.output.completed)
@@ -171,7 +178,41 @@ export class Application extends Component<any,any>{
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
 
                     continueButtonFrame.setDisabled(!complete)
-                }),
+
+                }).on('complete',async ({error,intent}) => {
+                    //
+                    if(!error){
+
+                        let complete = await Connector.getRoutes().charge({
+                            domain : this.getSettings().domain,
+                            id     : intent.id,
+                            email  : this.customer.email,
+                            type   : 'hosted',
+                            name   : 'paypal'
+                        })
+                        charge = {
+                            amount : this.customer.amount,
+                            currency : 'USD',
+                            intent : intent,
+                            error : error
+                        }
+                        console.log('charge:',charge)
+                       // if(charge.completed)
+                            //this.card = charge.card
+
+                        clientInformationTab
+                            .setDisabled(false).setAttribute('completed', 'true');
+                        paymentGatewayTab
+                            .setDisabled(false).setAttribute('completed', 'true');
+                        receiptTab
+                            .setDisabled(false).setAttribute('completed', 'true');
+
+                        selectedIndex = 2;
+                        navigator.updateSettings({selectedIndex:2});
+                    }
+
+                    continueButtonFrame.setBusy(false);
+                })
 
             },{
                 id        : 'receipt-tab',
@@ -236,12 +277,9 @@ export class Application extends Component<any,any>{
                     .setDisabled(true);
             }
 
-
             if(selectedIndex < 2 || e.item.id === 'back')
                navigator.updateSettings({selectedIndex});
 
-        }).on('index:changed', ({index}) => {
-            //selectedIndex = index;
         }).on('mounted',() => {
             // BUTTONS
             goBackButtonFrame

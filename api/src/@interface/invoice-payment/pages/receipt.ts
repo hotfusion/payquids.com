@@ -16,14 +16,15 @@ export class Receipt extends Component<any,any>{
         return super.mount(frame);
     }
     static mount(charge:any,card:any,customer:any){
+
         Receipt.frame .setHTML(`
             <div class="receipt-header">
               <div class="title">The payment successfully completed  </div>
               <div class="amount">$${charge.amount.toFixed(2)}</div>
               <div class="details">
                  <span class="name">${customer.name}</span>
-                 <span class="digits">**** **** ****</span> 
-                 <span class="last-digits">${card.last4}</span>
+                 <span class="digits" style="display: ${card?.last4?'block':'none'}">**** **** ****</span> 
+                 <span class="last-digits" style="display: ${card?.last4?'block':'none'}">${card?.last4}</span>
               </div>
               
               <div class="invoice">

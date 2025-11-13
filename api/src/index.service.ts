@@ -1,5 +1,5 @@
 import {Controller, REST, Bundler} from "@hotfusion/ws";
-import {IBranch, IProcessor, IGatewayIntent} from "./index.schema";
+import {IBranch, IProcessor, IGatewayIntent, IHosted, ICharge} from "./index.schema";
 import {Branches} from "./branches";
 import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
 import Stripe from "stripe";
@@ -33,11 +33,13 @@ export default class Gateway extends Branches {
         let processors = await this.source.processors.find({
             _bid : branch?._id
         }).toArray() as IProcessor[];
+
+
         branch.processors = processors;
         return branch
     }
     @REST.get()
-    async 'gateway/metadata'(@REST.schema() branch : Pick<IBranch, "domain" >,ctx){
+    async 'meta'(@REST.schema() branch : Pick<IBranch, "domain" >,ctx){
 
         let host = ctx.getHeaders().host
         let isDev = ctx.getNetwork().ips.local.find(x => host.split(':')[0]) !== undefined
@@ -60,6 +62,10 @@ export default class Gateway extends Branches {
         if(!processor)
             throw new Error("processor was not found");
 
+        let hosted = await this.source.hosted.find({
+            _bid : processor._bid
+        }).toArray() as IHosted[];
+
         let session = JWT.sign({
             gateway   : processor.gateway,
             domain    : document.domain,
@@ -68,7 +74,15 @@ export default class Gateway extends Branches {
             created   : Date.now(),
             keys      : {
                 public : processor.keys[document.mode].public,
-            }
+            },
+            hosted : hosted.map(x => {
+                return {
+                    gateway : x.gateway,
+                    keys : {
+                        public : x.keys[document.mode].public,
+                    }
+                }
+            })
         },this.SECRET)
 
         this.session.push({
@@ -78,9 +92,18 @@ export default class Gateway extends Branches {
         return session
     }
     @REST.post()
-    async 'gateway/charge'(@REST.schema() charge : Pick<IBranch, "domain" > & { id : string }){
+    async 'charge'(@REST.schema() charge : ICharge){
         let branch = await this.getBranchDocument(charge)
-        let processor = branch.processors.find(x => x.default) || branch.processors[0];
+        let processor:any;
+
+        console.log('charge:',charge)
+        if(charge.type === 'hosted'){
+            processor = await this.source.hosted.findOne({
+                _bid    : branch._id,
+                gateway : charge.name
+            });
+        }else
+            processor = branch.processors.find(x => x.default) || branch.processors[0];
 
         let card:any,intent:any;
         if(processor.gateway === "stripe"){
@@ -149,18 +172,17 @@ export default class Gateway extends Branches {
                 let total = 0;
                 const customIds: string[] = [];
 
-                for (const unit of order.purchase_units) {
-                    if (unit.payments?.captures) {
+                for (const unit of order.purchase_units)
+                    if (unit.payments?.captures)
                         for (const capture of unit.payments.captures) {
                             total += parseFloat(capture.amount.value);
                             if (capture.custom_id) customIds.push(capture.custom_id);
                         }
-                    }
-                }
+
 
                 return {
                     amount : total,
-                    email  : customIds[0]
+                    email  : customIds[0] || order?.payer?.email_address
                 };
             }
 
@@ -168,12 +190,14 @@ export default class Gateway extends Branches {
             request.requestBody({}); // required by SDK even if empty
             const response = await client.execute(request);
             // return the whole result or selected fields
+
             let {amount,email}
                 = calculateTotalAndGetCustomIds(response.result);
 
             let customer = await this.source.customers.findOne({
                 email
             });
+            console.log(customer);
 
             let {last_digits,brand,expiry}
                 = response.result.payment_source.card || {};
@@ -203,7 +227,7 @@ export default class Gateway extends Branches {
                 domain   : charge.domain,
                 amount   : amount,
                 created  : new Date().valueOf(),
-                card     : card._id,
+                card     : card?._id || null,
                 profile  : {
                     id : null
                 }
@@ -220,7 +244,7 @@ export default class Gateway extends Branches {
         }
     }
     @REST.get()
-    async 'gateway/intent'(@REST.schema() intent:IGatewayIntent,ctx){
+    async 'intent'(@REST.schema() intent:IGatewayIntent,ctx){
         let branch
                = await this.getBranchDocument(intent);
 

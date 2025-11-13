@@ -6,8 +6,9 @@ import paypal from "@paypal/checkout-server-sdk";
 interface ICTX {
     [key: string]: any
 }
+import {Hosted} from "../hosted";
 
-export class Processors extends Invoice {
+export class Processors extends Hosted {
     @REST.collection()
     async 'processors'(){
         return this.source.processors.find({}).toArray()
@@ -15,7 +16,6 @@ export class Processors extends Invoice {
     @REST.post()
     @Authorization.protect()
     async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys">, ctx:ICTX){
-
         let _bid = new ObjectId(ctx.getParams()._bid)
         let availabilities = ['checkout','gateway'];
 

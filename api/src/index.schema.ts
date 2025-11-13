@@ -3,9 +3,31 @@
 //@ts-ignore
 import type {TString} from "./default.types";
 
+type date = string
+type TProcessorsList = "paypal" | "stripe";
+type THostedList = "paypal";
+type TModesList = "development" | "production";
 
-
-
+export interface XBranchMeta {
+    gateway : TProcessorsList
+    domain  : string
+    mode    : TModesList
+    created : number
+    iat     : number
+    keys    : {
+        public: string
+    },
+    hosted: [
+        {
+            gateway: THostedList
+            keys: {
+                "public": string
+            }
+        }
+    ],
+    // only for localhost
+    processor?: IProcessor
+}
 export interface IProcessor {_id:string, default :boolean}[]
 export interface IBranch {
     _id        : TString<{min:3, max:100 }>;
@@ -22,8 +44,34 @@ export interface IBranch {
         email   : TString<{min:3, max:100}>
     }
 }
+export interface ICharge {
+    id     : string
+    domain : string
+    email  : string
+    type   : 'hosted' | 'processor'
+    name   ?:string
+}
+export interface IHosted {
+    _id     : string
+    _uid    : string;
+    name    : string;
+    email   : string;
+    default : boolean
+    gateway : 'paypal'
+    keys    : {
+        production : {
+            public : string
+            secret : string
+        },
+        development : {
+            public : string
+            secret : string
+        }
+    }
+}
 export interface IProcessor {
     _id     : string
+    _bid    : string
     _uid    : string;
     name    : string;
     email   : string;
@@ -100,7 +148,7 @@ interface IPolicy {
     policy: string;
     value: string;
 }
-type date = string
+
 export interface IInvoice {
     _id    : string;
     // processor _id
