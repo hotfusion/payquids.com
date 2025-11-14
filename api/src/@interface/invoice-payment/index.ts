@@ -19,8 +19,10 @@ interface IInterfaceSettings {
     }>
 }
 export class Application extends Component<any,any>{
-    customer:{name:string,email:string,amount:number,invoice:string,phone:string}
+    customer:{name:string,email:string,phone:string}
     card:any
+    amount:number
+    invoice:string
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
             theme  : 'default',
@@ -104,14 +106,16 @@ export class Application extends Component<any,any>{
                 icon : {
                   class : 'ri-arrow-drop-right-line'
                 },
-                component : () => new ClientInformation(this.getSettings() as any ).on("change", ({complete,client}) => {
+                component : () => new ClientInformation(this.getSettings() as any ).on("change", ({complete,customer,amount,invoice}) => {
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
 
                     let paymentGatewayTab
                         = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
 
-                    this.customer = client;
+                    this.amount    = amount;
+                    this.invoice   = invoice
+                    this.customer  = customer;
                     paymentGatewayTab.setDisabled(!complete);
                     continueButtonFrame.setDisabled(!complete);
                 }),
@@ -123,21 +127,19 @@ export class Application extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (component:ProcessorGateway) => {
+                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (Processor:ProcessorGateway) => {
 
-                    let { output : { client_secret } } = await Connector.getRoutes().intent({
-                        "domain"   : this.getSettings().domain,
-                        "amount"   : this.customer.amount,
-                        "email"    : this.customer.email,
-                        "name"     : this.customer.name,
-                        "phone"    : this.customer.phone,
-                        "mode"     : branch.mode,
-                        "currency" : "usd",
-                        "scope"    : "invoice",
+                    let { output : { orderID , hosted } } = await Connector.getRoutes().intent({
+                        domain    : this.getSettings().domain,
+                        amount    : this.amount,
+                        invoice   : this.invoice,
+                        customer  : this.customer
                     });
 
 
-                    await component.init(this.customer.amount,branch.keys.public, client_secret,branch.hosted);
+                    // new Processor(captureId ,hosted)
+                    console.log(orderID, hosted)
+                   // await component.init(this.amount,branch.keys.public, client_secret,branch.hosted);
 
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
@@ -145,7 +147,7 @@ export class Application extends Component<any,any>{
                     continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
                         continueButtonFrame.setBusy(true);
 
-                        let { error,intent } = charge = await component.charge()
+                        let { error,intent } = charge = await Processor.charge()
 
                         if(!error){
                             let charge = await Connector.getRoutes().charge({
@@ -191,10 +193,10 @@ export class Application extends Component<any,any>{
                             name   : 'paypal'
                         })
                         charge = {
-                            amount : this.customer.amount,
+                            amount   : this.getSettings().amount,
                             currency : 'USD',
-                            intent : intent,
-                            error : error
+                            intent   : intent,
+                            error    : error
                         }
                         console.log('charge:',charge)
                        // if(charge.completed)

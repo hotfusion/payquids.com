@@ -6,24 +6,24 @@ import paypal from "@paypal/checkout-server-sdk";
 interface ICTX {
     [key: string]: any
 }
-import {Hosted} from "../hosted";
 
-export class Processors extends Hosted {
+export class Processors extends Invoice {
     @REST.collection()
     async 'processors'(){
         return this.source.processors.find({}).toArray()
     }
     @REST.post()
     @Authorization.protect()
-    async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys">, ctx:ICTX){
+    async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys" | "type">, ctx:ICTX){
         let _bid = new ObjectId(ctx.getParams()._bid)
-        let availabilities = ['checkout','gateway'];
+
 
         if(processor.gateway === 'stripe'){
             //&& (await stripe(keys.private).accounts.retrieve())?.object !== 'account'
         }
 
         if(processor.gateway === 'paypal'){
+            // Validate keys
             let modes = ['development','production'];
             for(let i = 0; i < modes.length; i++)
                 if(processor?.keys?.[modes[i]]?.public && processor?.keys?.[modes[i]]?.secret){
@@ -37,13 +37,14 @@ export class Processors extends Hosted {
 
                 }
         }
+
         //
         let _id = (await this.source.processors.insertOne({
             _bid           : _bid,
             name           : processor.name,
             gateway        : processor.gateway,
             email          : processor.email,
-            availabilities : availabilities,
+            type           : processor.type,
             keys    : {
                 production : {
                     public : processor?.keys?.production?.public || false,

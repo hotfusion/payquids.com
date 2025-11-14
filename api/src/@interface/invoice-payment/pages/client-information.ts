@@ -26,7 +26,12 @@ export class ClientInformation extends Component<any,any>{
                 let phone   = this.form.phone.getComponent().getValue()
 
                 let complete = invoice && /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email) && !isNaN(amount) && name?.length > 0 && phone
-                this.emit("change", {complete,client: {invoice,email,amount:parseFloat(amount),name,phone}})
+                this.emit("change", {
+                    invoice,
+                    complete,
+                    amount   : parseFloat(amount),
+                    customer : {email,name,phone}
+                })
             })
         }
 

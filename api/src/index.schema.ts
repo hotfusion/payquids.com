@@ -5,8 +5,8 @@ import type {TString} from "./default.types";
 
 type date = string
 type TProcessorsList = "paypal" | "stripe";
-type THostedList = "paypal";
-type TModesList = "development" | "production";
+type TModesList      = "development" | "production";
+type THostedList     = "paypal";
 
 export interface XBranchMeta {
     gateway : TProcessorsList
@@ -44,12 +44,25 @@ export interface IBranch {
         email   : TString<{min:3, max:100}>
     }
 }
-export interface ICharge {
-    id     : string
-    domain : string
-    email  : string
-    type   : 'hosted' | 'processor'
-    name   ?:string
+
+export interface IGatewayIntent {
+    domain  ?: string
+    amount   : number
+    invoice  : string
+    customer : {
+        name ?:string
+        email :string
+        phone ?:string
+    }
+}
+
+export interface IGatewayCharge {
+    amount : number
+    customer : {
+        name ?:string
+        email ?:string
+        phone ?:string
+    }
 }
 export interface IHosted {
     _id     : string
@@ -70,13 +83,14 @@ export interface IHosted {
     }
 }
 export interface IProcessor {
-    _id     : string
-    _bid    : string
+    _id     : string;
+    _bid    : string;
     _uid    : string;
     name    : string;
     email   : string;
     default : boolean
-    gateway : 'stripe' | 'paypal'
+    type    : "hosted" | "gateway"
+    gateway : "stripe" | "paypal"
     keys    : {
         production : {
             public : string
@@ -91,16 +105,6 @@ export interface IProcessor {
 export interface IPagination  {
     page : number;
     size : number;
-}
-export interface IGatewayIntent {
-    domain:string,
-    amount:number,
-    email:string
-    name:string
-    phone : string
-    currency:"usd" | "cad",
-    scope: "invoice" | "products" | "donation",
-    mode:"production" | "development"
 }
 export interface ICustomerProcessorProfile {
     _pid : string;

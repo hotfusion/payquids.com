@@ -1,18 +1,48 @@
 import {Component, Frame, EventEmitter} from "@hotfusion/ui";
-import * as Stripe from "@stripe/stripe-js";
+import * as SM from "@stripe/stripe-js";
+declare const paypal:any;
+
+
+
 interface IPaymentGatewaySettings {
     theme: string;
     branch : any
 }
 
-class Processor extends EventEmitter {
-     mount  : (dom:HTMLElement) => Promise<this>
-     charge : () => Promise<{intent:any,amount:number,error:any}>
+class Processor {
+    recurring : boolean = false;
+    mount  : (dom:HTMLElement) => Promise<this>
+    charge : () => Promise<any>
 }
 
-declare const paypal:any;
 
-//Hosted
+class Paypal extends EventEmitter implements Processor {
+    private button    : any;
+    private fields    : any;
+    recurring : boolean = false
+    async mount(dom:HTMLElement) {
+        return this;
+    }
+    async charge(){
+        return {}
+    }
+}
+
+class Stripe {
+    private elements : any
+    private card     : any
+    private recurring : any
+    async mount(dom:HTMLElement) {
+        return this;
+    }
+    async charge(){
+        return {}
+    }
+}
+
+
+
+/*//Hosted
 class PayPalHosted extends EventEmitter implements Processor {
     private button:any;
 
@@ -205,7 +235,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
     }
     async mount(dom:HTMLElement) {
         this.stripe
-            = await Stripe.loadStripe(this.public_key);
+            = await SM.loadStripe(this.public_key);
 
         let getRootStyle = (style:string) => {
             return getComputedStyle(document.body).getPropertyValue(style).trim()
@@ -301,7 +331,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
             intent : paymentIntent
         }
     }
-}
+}*/
 
 
 export class ProcessorGateway extends Component<any,any>{
@@ -312,7 +342,7 @@ export class ProcessorGateway extends Component<any,any>{
     async init(amount:number,public_key:string,client_secret:string,hosted:{gateway:string,keys:{public:string}}[]) {
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
-            let Processor
+            /*let Processor
                 = this.branch.gateway === 'stripe'? StripeProcessor : PayPalProcessor
 
             return this.processor = (await new Processor(amount, public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", async () => {
@@ -337,7 +367,7 @@ export class ProcessorGateway extends Component<any,any>{
 
                 resolve(true)
                 frame.setStyle({opacity:1});
-            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))
+            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))*/
         })
     }
     async charge():Promise<{amount:number,error:any,intent:any,currency:string | boolean}>{

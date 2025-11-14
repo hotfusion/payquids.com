@@ -1,11 +1,9 @@
 import {Controller, REST, Bundler} from "@hotfusion/ws";
-import {IBranch, IProcessor, IGatewayIntent, IHosted, ICharge} from "./index.schema";
+import {IBranch, IProcessor, IGatewayIntent, IHosted, IGatewayCharge} from "./index.schema";
 import {Branches} from "./branches";
 import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
-import Stripe from "stripe";
-import paypal from "@paypal/checkout-server-sdk";
-import * as path from "node:path";
-
+import {Stripe} from "./processors/stripe";
+import {PayPal} from "./processors/paypal";
 
 export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
@@ -66,7 +64,7 @@ export default class Gateway extends Branches {
             _bid : processor._bid
         }).toArray() as IHosted[];
 
-        let session = JWT.sign({
+        return JWT.sign({
             gateway   : processor.gateway,
             domain    : document.domain,
             mode      : isDev ? 'development' : document.mode,
@@ -84,16 +82,10 @@ export default class Gateway extends Branches {
                 }
             })
         },this.SECRET)
-
-        this.session.push({
-           session
-        });
-
-        return session
     }
     @REST.post()
-    async 'charge'(@REST.schema() charge : ICharge){
-        let branch = await this.getBranchDocument(charge)
+    async 'charge'(@REST.schema() charge : IGatewayCharge){
+        /*let branch = await this.getBranchDocument(charge)
         let processor:any;
 
         console.log('charge:',charge)
@@ -241,112 +233,80 @@ export default class Gateway extends Branches {
             card      : card || false,
             domain    : charge.domain,
             completed : intent.status === 'succeeded',
-        }
+        }*/
     }
     @REST.get()
     async 'intent'(@REST.schema() intent:IGatewayIntent,ctx){
+
+        let domain
+            = ctx.getHeaders().host.split('.').slice(-2).join('.')
+
         let branch
-               = await this.getBranchDocument(intent);
+               = await this.getBranchDocument({domain});
+
+        if(!branch)
+            branch
+                = await this.getBranchDocument({domain:intent.domain});
 
         let processor
             = branch.processors.find(x => x.default) || branch.processors[0];
 
         //console.log(processor,branch)
 
-        let customer = await this.source.customers.findOne({
-            email : intent.email
+        /*let customer = await this.source.customers.findOne({
+            email : intent.customer.email
         });
 
         if(!customer) {
             await this.source.customers.insertOne({
                 _bid     : branch._id,
-                email    : intent.email,
-                name     : intent.name,
-                phone    : intent.phone,
+                email    : intent.customer.email,
+                name     : intent.customer.name,
+                phone    : intent.customer.phone,
                 profiles : []
             });
 
             customer = await this.source.customers.findOne({
-                email : intent.email
+                email : intent.customer.email
             });
-        }
+        }*/
 
-        let profile:{id:string},client_secret:string;
-        if(processor.gateway === 'stripe') {
-            let stripe
-                = new Stripe(processor.keys[branch.mode].secret);
-
-            profile
-                = (await stripe.customers.list({email: intent.email, limit: 1}))?.data?.[0];
-
-            if (!profile)
-                profile = await stripe.customers.create({
-                    email : intent.email,
-                    name  : intent.name,
-                    phone : intent.phone
-                });
-
-            client_secret = (await stripe.paymentIntents.create({
-                amount    : Number(intent.amount) * 100,
-                currency  : intent.currency,
-                customer  : profile.id,
-                // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
-                automatic_payment_methods: {
-                    enabled: true,
-                },
-                metadata : {
-                    customer_ip : ctx.getIp(),
-                    server_ip   : ctx.getNetwork().ips.public,
-                    host        : ctx.getHeaders().host
-                }
-            })).client_secret;
-
-            if(profile?.id && !customer.profiles.find(x => x.id === profile.id)) {
-                customer.profiles.push({
-                    id : profile.id, _pid : processor._id
-                })
-
-                await this.source.customers.updateOne({
-                    email : intent.email
-                },{
-                    $set : {
-                        profiles : customer.profiles
-                    }
-                })
+        let hosted = (await this.source.hosted.find({
+            _bid     : branch._id
+        }).toArray()).map((x:{gateway:string,keys: {public:string,secret:string}}) => ({
+            orderID : null,
+            gateway : x.gateway,
+            keys    : {
+                public : x.keys[branch.mode].public,
+                secret : x.keys[branch.mode].secret,
             }
+        }));
 
-            return {client_secret}
+        console.log('hosted:',hosted);
+        for (let i = 0; i < hosted.length; i++) {
+            if(hosted[i].gateway === 'paypal'){
+                hosted[i].orderID = await new PayPal(branch.mode, 'USD', {
+                    public  : hosted[i].keys[branch.mode].public,
+                    private : hosted[i].keys[branch.mode].secret
+                }).capture(intent.amount,intent.customer)
+            }
+        }
+        if(processor.gateway === 'stripe') {
+            let orderID = await new Stripe(branch.mode, 'USD', {
+                public  : processor.keys[branch.mode].public,
+                private : processor.keys[branch.mode].secret
+            }).capture(intent.amount,intent.customer)
+
+            return {orderID, hosted};
         }
 
         if(processor.gateway === 'paypal') {
-            let sandbox
-                = branch.mode === 'development'?paypal.core.SandboxEnvironment:paypal.core.LiveEnvironment;
+            let orderID = await new PayPal(branch.mode, 'USD', {
+                public  : processor.keys[branch.mode].public,
+                private : processor.keys[branch.mode].secret
+            }).capture(intent.amount,intent.customer)
 
-            let client = new paypal.core.PayPalHttpClient(
-                new sandbox(
-                    processor.keys[branch.mode].public,
-                    processor.keys[branch.mode].secret
-                )
-            );
-
-            let request = new paypal.orders.OrdersCreateRequest();
-                request.prefer("return=representation");
-                request.requestBody({
-                    intent         : "CAPTURE",
-                    purchase_units : [
-                        {
-                            amount: {
-                                currency_code : 'USD',
-                                value         : intent.amount
-                            },
-                            custom_id : intent.email
-                        }
-                    ]
-                });
-
-            return {
-                client_secret : (await client.execute(request)).result.id
-            };
+            return {orderID, hosted};
         }
 
     }
