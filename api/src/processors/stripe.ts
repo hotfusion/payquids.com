@@ -32,7 +32,7 @@ export class Stripe {
     async capture(amount:number,customer: {email:string,name?:string,phone?:string},metadata ?: any){
         let {id} = await this.setCustomer(customer);
 
-        return (await this.sandbox.paymentIntents.create({
+        let intent = await this.sandbox.paymentIntents.create({
             amount    : Number(amount) * 100,
             currency  : this.currency,
             customer  : id,
@@ -40,6 +40,9 @@ export class Stripe {
             automatic_payment_methods: {
                 enabled: true,
             }
-        })).client_secret;
+        })
+        return {
+            id : intent.client_secret
+        }
     }
 }

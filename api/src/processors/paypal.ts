@@ -11,7 +11,7 @@ export class PayPal {
         this.sandbox
             = mode === 'development'?paypal.core.SandboxEnvironment:paypal.core.LiveEnvironment;
     }
-    async capture(amount:number,customer: {email:string}, metadata ?: any){
+    async capture(amount:number,customer: {email:string}, metadata ?: any): Promise<{id:string}> {
         let client = new paypal.core.PayPalHttpClient(
             new this.sandbox(this.keys.public, this.keys.private)
         );
@@ -31,6 +31,6 @@ export class PayPal {
             ]
         });
 
-        return (await client.execute(request)).result.id;
+        return (await client.execute(request)).result;
     }
 }

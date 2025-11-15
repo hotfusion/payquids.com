@@ -60,27 +60,9 @@ export default class Gateway extends Branches {
         if(!processor)
             throw new Error("processor was not found");
 
-        let hosted = await this.source.hosted.find({
-            _bid : processor._bid
-        }).toArray() as IHosted[];
-
         return JWT.sign({
-            gateway   : processor.gateway,
-            domain    : document.domain,
             mode      : isDev ? 'development' : document.mode,
-            processor : isDev ? processor     : undefined,
-            created   : Date.now(),
-            keys      : {
-                public : processor.keys[document.mode].public,
-            },
-            hosted : hosted.map(x => {
-                return {
-                    gateway : x.gateway,
-                    keys : {
-                        public : x.keys[document.mode].public,
-                    }
-                }
-            })
+            processor : isDev ? processor     : undefined
         },this.SECRET)
     }
     @REST.post()
@@ -236,7 +218,7 @@ export default class Gateway extends Branches {
         }*/
     }
     @REST.get()
-    async 'intent'(@REST.schema() intent:IGatewayIntent,ctx){
+    async 'intent'(@REST.schema() intent:IGatewayIntent,ctx):Promise<{orderID:string,gateway:string,type:string,keys:{public:string}}[]>{
 
         let domain
             = ctx.getHeaders().host.split('.').slice(-2).join('.')
@@ -248,66 +230,47 @@ export default class Gateway extends Branches {
             branch
                 = await this.getBranchDocument({domain:intent.domain});
 
-        let processor
-            = branch.processors.find(x => x.default) || branch.processors[0];
+        let gateways = (await this.source.processors.find({
+            _bid     : branch._id,
+            $or : [{
+                type    : 'gateway',
+                default : true
+            },{
+                type    : 'hosted',
+                default : true
+            }]
+        }).toArray())
 
-        //console.log(processor,branch)
+        const processors = []
+        for(let i = 0; i < gateways.length; i++){
+            let processor = gateways[i];
+            let orderID:string;
 
-        /*let customer = await this.source.customers.findOne({
-            email : intent.customer.email
-        });
+            if(processor.provider === 'paypal')
+                orderID = (await new PayPal(branch.mode, 'USD', {
+                    public  : processor.keys[branch.mode].public,
+                    private : processor.keys[branch.mode].secret
+                }).capture(intent.amount, intent.customer)).id;
 
-        if(!customer) {
-            await this.source.customers.insertOne({
-                _bid     : branch._id,
-                email    : intent.customer.email,
-                name     : intent.customer.name,
-                phone    : intent.customer.phone,
-                profiles : []
-            });
+            if(processor.provider === 'stripe')
+                orderID = (await new Stripe(branch.mode, 'USD', {
+                    public  : processor.keys[branch.mode].public,
+                    private : processor.keys[branch.mode].secret
+                }).capture(intent.amount,intent.customer)).id;
 
-            customer = await this.source.customers.findOne({
-                email : intent.customer.email
-            });
-        }*/
-
-        let hosted = (await this.source.hosted.find({
-            _bid     : branch._id
-        }).toArray()).map((x:{gateway:string,keys: {public:string,secret:string}}) => ({
-            orderID : null,
-            gateway : x.gateway,
-            keys    : {
-                public : x.keys[branch.mode].public,
-                secret : x.keys[branch.mode].secret,
+            let keys = {
+                public : processor.keys[branch.mode].public,
             }
-        }));
 
-        console.log('hosted:',hosted);
-        for (let i = 0; i < hosted.length; i++) {
-            if(hosted[i].gateway === 'paypal'){
-                hosted[i].orderID = await new PayPal(branch.mode, 'USD', {
-                    public  : hosted[i].keys[branch.mode].public,
-                    private : hosted[i].keys[branch.mode].secret
-                }).capture(intent.amount,intent.customer)
-            }
+            let provider = processor.provider;
+            let type     = processor.type;
+
+            processors.push({
+                orderID, keys, provider, type
+            })
+
         }
-        if(processor.gateway === 'stripe') {
-            let orderID = await new Stripe(branch.mode, 'USD', {
-                public  : processor.keys[branch.mode].public,
-                private : processor.keys[branch.mode].secret
-            }).capture(intent.amount,intent.customer)
-
-            return {orderID, hosted};
-        }
-
-        if(processor.gateway === 'paypal') {
-            let orderID = await new PayPal(branch.mode, 'USD', {
-                public  : processor.keys[branch.mode].public,
-                private : processor.keys[branch.mode].secret
-            }).capture(intent.amount,intent.customer)
-
-            return {orderID, hosted};
-        }
+        return processors;
 
     }
 }

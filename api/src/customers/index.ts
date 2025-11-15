@@ -23,23 +23,27 @@ export class DB {
             name : 'branches'
         }, {
             name : 'cards'
-        },{
-            name : 'hosted'
         }]
         try {
             console.log("MongoDB connecting to:",uri);
+
             await connection.connect();
-            let source = connection.db(URIParser(uri).database);
+
+            let source
+                = connection.db(URIParser(uri).database);
 
             for (const {name} of collections) {
                 console.log(`- MongoDB collection created [${name}]`);
-                const exists = await source.listCollections({ name }).hasNext();
+
+                let exists
+                    = await source.listCollections({ name }).hasNext();
+
                 if (!exists) {
                     await source.createCollection(name);
                     console.log(`📂 Created collection: ${name}`);
                 }
-                //Type { name: string; } cannot be used as an index type.
-                this.source[name] = source.collection(name);
+                this.source[name]
+                    = source.collection(name);
             }
             console.log("MongoDB connected!");
             return this;

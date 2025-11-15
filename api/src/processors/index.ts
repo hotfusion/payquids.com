@@ -14,15 +14,15 @@ export class Processors extends Invoice {
     }
     @REST.post()
     @Authorization.protect()
-    async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "gateway" | "email" | "keys" | "type">, ctx:ICTX){
+    async ':_bid/processors/create'(@REST.schema() processor:Pick<IProcessor, "name" | "provider" | "email" | "keys" | "type" | "default">, ctx:ICTX){
         let _bid = new ObjectId(ctx.getParams()._bid)
 
 
-        if(processor.gateway === 'stripe'){
+        if(processor.provider === 'stripe'){
             //&& (await stripe(keys.private).accounts.retrieve())?.object !== 'account'
         }
 
-        if(processor.gateway === 'paypal'){
+        if(processor.provider === 'paypal'){
             // Validate keys
             let modes = ['development','production'];
             for(let i = 0; i < modes.length; i++)
@@ -38,13 +38,36 @@ export class Processors extends Invoice {
                 }
         }
 
+        if(processor.default && processor.type === "gateway"){
+            await this.source.processors.updateOne({
+                _bid : _bid,
+                type : "gateway"
+            },{
+                $set : {
+                    default : false
+                }
+            })
+        }
+
+        if(processor.default && processor.type === "hosted"){
+            await this.source.processors.updateOne({
+                _bid     : _bid,
+                type     : "hosted",
+                provider : processor.provider,
+            },{
+                $set : {
+                    default : false
+                }
+            })
+        }
         //
         let _id = (await this.source.processors.insertOne({
             _bid           : _bid,
             name           : processor.name,
-            gateway        : processor.gateway,
+            provider       : processor.provider,
             email          : processor.email,
             type           : processor.type,
+            default        : processor.default,
             keys    : {
                 production : {
                     public : processor?.keys?.production?.public || false,
@@ -78,14 +101,14 @@ export class Processors extends Invoice {
     }
     @REST.get()
     @Authorization.protect()
-    async ':_bid/processors/:_pid/update'(@REST.schema() processor:Pick<IProcessor,  "name" | "gateway" | "email" >, ctx:ICTX){
+    async ':_bid/processors/:_pid/update'(@REST.schema() processor:Pick<IProcessor,  "name" | "provider" | "email" >, ctx:ICTX){
         return await this.source.processors.updateOne({
             _bid : new ObjectId(ctx.getParams()._bid),
             _id  : new ObjectId(ctx.getParams()._pid)
         },{
             $set : {
                 name    : processor.name,
-                gateway : processor.gateway,
+                gateway : processor.provider,
                 email   : processor.email
             }
         })

@@ -28,7 +28,7 @@ export interface XBranchMeta {
     // only for localhost
     processor?: IProcessor
 }
-export interface IProcessor {_id:string, default :boolean}[]
+//export interface IProcessor {_id:string, default :boolean}[]
 export interface IBranch {
     _id        : TString<{min:3, max:100 }>;
     _uid       : TString<{min:3, max:100 }>;
@@ -83,15 +83,15 @@ export interface IHosted {
     }
 }
 export interface IProcessor {
-    _id     : string;
-    _bid    : string;
-    _uid    : string;
-    name    : string;
-    email   : string;
-    default : boolean
-    type    : "hosted" | "gateway"
-    gateway : "stripe" | "paypal"
-    keys    : {
+    _id      : string;
+    _bid     : string;
+    _uid     : string;
+    name     : string;
+    email    : string;
+    default  : boolean
+    type     : "hosted" | "gateway"
+    provider : "stripe" | "paypal"
+    keys     : {
         production : {
             public : string
             secret : string

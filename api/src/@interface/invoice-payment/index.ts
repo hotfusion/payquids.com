@@ -129,7 +129,7 @@ export class Application extends Component<any,any>{
                 align     : 'center',
                 component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (Processor:ProcessorGateway) => {
 
-                    let { output : { orderID , hosted } } = await Connector.getRoutes().intent({
+                    let { output  } = await Connector.getRoutes().intent({
                         domain    : this.getSettings().domain,
                         amount    : this.amount,
                         invoice   : this.invoice,
@@ -138,7 +138,7 @@ export class Application extends Component<any,any>{
 
 
                     // new Processor(captureId ,hosted)
-                    console.log(orderID, hosted)
+                    console.log({output})
                    // await component.init(this.amount,branch.keys.public, client_secret,branch.hosted);
 
                     let continueButtonFrame:Frame
