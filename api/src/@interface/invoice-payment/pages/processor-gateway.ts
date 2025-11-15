@@ -16,23 +16,223 @@ class Processor {
 }
 
 
-class Paypal extends EventEmitter implements Processor {
+export class Paypal extends EventEmitter implements Processor {
     private button    : any;
     private fields    : any;
     recurring : boolean = false
+    constructor(private orderID:string, private keys : {public:string}, private type:"gateway" | "hosted") {
+        super();
+    }
     async mount(dom:HTMLElement) {
+        let script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD`;
+        script.onload = async () => {
+            this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom);
+        }
+        document.body.appendChild(script);
         return this;
+    }
+    async mountCard(dom:HTMLElement) {
+        dom.innerHTML
+            = `<label for="card-number">Card Number:</label><div id="card-number"/>
+               <label for="card-cvv">Security Code:</label><div id="card-cvv"/>
+               <label for="card-expiry">Expiration date:</label><div id="card-expiry"/>`;
+
+
+
+        let getRootStyle = (style:string) => {
+            return getComputedStyle(document.body).getPropertyValue(style).trim()
+        }
+
+        this.fields = paypal.CardFields({
+            createOrder: async () => {
+                return this.orderID;
+            },
+            onApprove: ({orderID}) => {
+                /*(<any>this)._complete({
+                    error  : null,
+                    intent : {
+                        id : orderID,
+                        processor: 'paypal'
+                    },
+                    amount : this.amount,
+                });*/
+            },
+            onError: (e) => {
+                (<any>this)._reject(e)
+            },
+            style: {
+                'input': {
+                    'font-size': '12px',
+                    'color': getRootStyle('--color-text'),
+                    'border' :  'solid 1px ' + getRootStyle('--color-border'),
+                    'height': '35px',
+                    'margin' :'0',
+                    'padding' :'0 0 0 10px',
+                    'background': getRootStyle('--color-bg'),
+                    'outline': 'none',
+                    'borderRadius' :'0px'
+                },
+                'input:focus': {
+                    'outline'      : 'none',
+                    'box-shadow'   : 'none',
+                    'border-color' : 'solid 1px ' + getRootStyle('--color-accent'),
+                },
+                'input:hover': {
+                    'border' : 'solid 1px ' + getRootStyle('--color-accent'),
+                },
+                '.valid': {
+                    'color'  : getRootStyle('--color-text'),
+                    'border' : 'solid 1px ' + getRootStyle('--color-border'),
+                },
+                '.invalid': {
+                    'outline'    : 'none',
+                    'box-shadow' : 'none',
+                    'border'     : 'solid 1px ' + getRootStyle('--color-border'),
+                    'color'      : getRootStyle('--color-border-accent')
+                }
+            },
+            inputEvents: {
+                onChange: (data) => {
+                    this.emit('change',{complete:data.isFormValid,component:this})
+                }
+            },
+        })
+
+        await this.fields.NumberField({ placeholder: '1234 5678 9012 3456' }).render('#card-number')
+        await this.fields.ExpiryField().render('#card-expiry')
+        await this.fields.CVVField().render('#card-cvv');
+
+        this.emit('mounted',this);
+
+        return this;
+    }
+    async mountButton(dom:HTMLElement) {
+        dom.innerHTML = `<div id="paypal-button" style="width: 100%"/>`;
+        this.button = paypal.Buttons({
+            createOrder: async () => {
+                return this.orderID;
+            },
+            onApprove: async (data, actions) => {
+                /*this.emit('complete',{
+                    error  : null,
+                    amount : this.amount,
+                    intent : {
+                        id        : data.orderID,
+                        client    : data.payerID,
+                        processor : 'paypal'
+                    }
+                })*/
+            },
+            onError: (err) => {
+                (<any>this)._reject(err);
+            },
+            onInit: (data, actions) => {
+                this.emit('change', { ready:true, component:this });
+            },
+            style: {
+                layout : 'vertical',
+                color  : 'blue',
+                shape  : 'rect',
+                label  : 'pay'
+            }
+        });
+
+        await this.button.render('#paypal-button');
     }
     async charge(){
         return {}
     }
 }
 
-class Stripe {
+export class Stripe extends EventEmitter{
     private elements : any
     private card     : any
     private recurring : any
+    constructor(private orderID:string, private keys : {public:string}) {
+        super();
+    }
     async mount(dom:HTMLElement) {
+        await this.mountCard(dom,this.orderID,this.keys)
+        return this;
+    }
+    async mountCard(dom:HTMLElement,orderID:string,keys:{public:string}) {
+        const stripe
+            = await SM.loadStripe(keys.public);
+
+        let getRootStyle = (style:string) => {
+            return getComputedStyle(document.body).getPropertyValue(style).trim()
+        }
+        this.elements = stripe.elements({
+            // for subscription/recurring the clientSecret is undefined
+            clientSecret : orderID,
+            fonts : [{
+                cssSrc: 'https://fonts.googleapis.com/css2?family=Roboto:wght@100;400;700;900'
+            }],
+            appearance:{
+                theme: 'stripe',
+                rules : {
+                    '.Input': {
+                        borderRadius    : '3px',
+                        height          : '30px',
+                        boxShadow       : 'none',
+                        fontSize        : '12px',
+                        fontFamily      : 'Roboto',
+                        backgroundColor : getRootStyle('--color-bg'),
+                        color           : getRootStyle('--color-text'),
+                        border          : 'solid 1px ' + getRootStyle('--color-border')
+                    },
+                    '.Input--invalid': {
+                        borderColor :'#b11657'
+                    },
+                    '.Input:hover': {
+                        borderColor :  getRootStyle('--color-accent'),
+                        boxShadow:'none'
+                    },
+                    '.Input:focus': {
+                        borderColor : getRootStyle('--color-accent-opacity-medium'),
+                        boxShadow   : 'none'
+                    },
+                    '.Label' : {
+                        fontSize    : '12px',
+                        fontWeight  : 'bold',
+                        fontFamily  : 'Roboto',
+                        color: getRootStyle('--color-text'),
+                    }
+                }
+            }
+        });
+
+        this.card = this.elements.create(this.recurring?"card":"payment", {
+            layout: "tabs",
+            wallets: {
+                applePay: 'never',
+                googlePay: 'never',
+                link: 'never',
+            },
+            style : {
+                base: {
+                    borderRadius :'3px',
+                    height : '30px',
+                    padding : '5px',
+                    boxShadow:'none',
+                    backgroundColor : 'transparent',
+                    fontSize : '14px',
+                    fontFamily:'Roboto',
+                    color:'#222'
+                }
+            },
+        }).on('ready',() => {
+            setTimeout(() => {
+                this.emit('mounted',this)
+            },700)
+        }).on('change',({complete}) => {
+            this.emit('change',{complete,component:this})
+        })
+
+        this.card.mount(dom);
+        (<any>dom).firstChild.style.width = '100%';
+
         return this;
     }
     async charge(){
@@ -334,6 +534,7 @@ class StripeProcessor extends EventEmitter implements Processor  {
 }*/
 
 
+/*
 export class ProcessorGateway extends Component<any,any>{
     processor: Processor;
     constructor(private config: IPaymentGatewaySettings,private branch:any ) {
@@ -342,7 +543,7 @@ export class ProcessorGateway extends Component<any,any>{
     async init(amount:number,public_key:string,client_secret:string,hosted:{gateway:string,keys:{public:string}}[]) {
         this.getFrame().setStyle({opacity:0,marginTop:'20px'})
         return new Promise(async resolve => {
-            /*let Processor
+            /!*let Processor
                 = this.branch.gateway === 'stripe'? StripeProcessor : PayPalProcessor
 
             return this.processor = (await new Processor(amount, public_key,client_secret).mount(this.getFrame().getTag())).on("mounted", async () => {
@@ -367,7 +568,7 @@ export class ProcessorGateway extends Component<any,any>{
 
                 resolve(true)
                 frame.setStyle({opacity:1});
-            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))*/
+            }).on("charge", (e) => this.emit("charge",e)).on("change",(e) => this.emit("change",e))*!/
         })
     }
     async charge():Promise<{amount:number,error:any,intent:any,currency:string | boolean}>{
@@ -384,4 +585,4 @@ export class ProcessorGateway extends Component<any,any>{
     async mount(frame: Frame): Promise<this> {
         return super.mount(frame);
     }
-}
+}*/

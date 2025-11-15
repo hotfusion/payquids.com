@@ -1,5 +1,5 @@
 import {ClientInformation} from "./pages/client-information";
-import {ProcessorGateway} from "./pages/processor-gateway";
+import {Paypal,Stripe} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
 //@ts-ignore
 import {Connector} from "@hotfusion/ws/client/index.esm.js";
@@ -18,6 +18,8 @@ interface IInterfaceSettings {
         phone   : string;
     }>
 }
+
+interface XProcessor {orderID:string,provider:string,type:string,keys:{public:string}}
 export class Application extends Component<any,any>{
     customer:{name:string,email:string,phone:string}
     card:any
@@ -127,19 +129,40 @@ export class Application extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () =>  new ProcessorGateway( this.getSettings() as any, branch).on('mounted', async (Processor:ProcessorGateway) => {
+                component : () =>  new Component({},{}).on('mounted', async (component:Component) => {
 
-                    let { output  } = await Connector.getRoutes().intent({
+                    let GatewayFrame = new Frame('gateway-frame');
+                    let HostedFrame  = new Frame('hosted-frame').setSize(100);
+                    let providers = {
+                        paypal : Paypal,
+                        stripe : Stripe
+                    }
+
+                    let processors:XProcessor[] = (await Connector.getRoutes().intent({
                         domain    : this.getSettings().domain,
                         amount    : this.amount,
                         invoice   : this.invoice,
                         customer  : this.customer
+                    })).output;
+
+                    let MountHostedProcessor = async (type:string,processors:XProcessor[]) => {
+                        for (let i = 0; i < processors.length; i++)
+                            if(processors[i].type === type)
+                                await new providers[processors[i].provider](processors[i].orderID,processors[i].keys,processors[i].type).mount((type === 'gateway'?GatewayFrame:HostedFrame).getTag())
+                    }
+
+                    GatewayFrame.on('mounted', async (frame:Frame) => {
+
+                        await MountHostedProcessor('gateway',processors)
+
+                        if(HostedFrame.isMounted())
+                            return await MountHostedProcessor('hosted',processors);
+
+                        await MountHostedProcessor('hosted',processors);
                     });
 
+                    await component.getFrame().setOrientation('horizontal').push(GatewayFrame,HostedFrame);
 
-                    // new Processor(captureId ,hosted)
-                    console.log({output})
-                   // await component.init(this.amount,branch.keys.public, client_secret,branch.hosted);
 
                     let continueButtonFrame:Frame
                         = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
@@ -147,7 +170,7 @@ export class Application extends Component<any,any>{
                     continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
                         continueButtonFrame.setBusy(true);
 
-                        let { error,intent } = charge = await Processor.charge()
+                        /*let { error,intent } = charge = await Processor.charge()
 
                         if(!error){
                             let charge = await Connector.getRoutes().charge({
@@ -169,7 +192,7 @@ export class Application extends Component<any,any>{
 
                             selectedIndex = 2;
                             navigator.updateSettings({selectedIndex:2});
-                        }
+                        }*/
 
                         continueButtonFrame.setBusy(false);
                     });
