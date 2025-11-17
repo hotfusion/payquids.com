@@ -2,7 +2,7 @@
 import {Application} from "./index";
 
 //s
-import {Frame} from "@hotfusion/ui";
+import {Frame,Body} from "@hotfusion/ui";
 import {Connector} from '@hotfusion/ws/client/index.esm.js';
 import { defineComponent } from 'vue';
 import "./index.less"
@@ -47,7 +47,7 @@ export default defineComponent({
     if(!this?.domain)
       return alert('Domain name is missing')
 
-    this._interface = new Application({
+    this.manager = new Application({
       theme     : "dark",
       connector : this.connector,
       domain    : this.domain,
@@ -60,9 +60,14 @@ export default defineComponent({
       }
     })
 
-    await new Frame('invoice-payment', this._interface)
-        .setWidth('100%')
-        .mount(undefined,this.$el.parentElement)
+    new Body(this.manager, {
+      width : '400px',
+      height : '600px',
+
+    }).on('ready', async (body) => {
+
+    });
+
   },
   watch : {
     'theme'(){
