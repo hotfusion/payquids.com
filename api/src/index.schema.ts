@@ -57,12 +57,8 @@ export interface IGatewayIntent {
 }
 
 export interface IGatewayCharge {
-    amount : number
-    customer : {
-        name ?:string
-        email ?:string
-        phone ?:string
-    }
+    id       : string
+    provider : string
 }
 export interface IHosted {
     _id     : string

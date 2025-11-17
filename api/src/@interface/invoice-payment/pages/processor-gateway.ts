@@ -1,4 +1,4 @@
-import {Component, Frame, EventEmitter} from "@hotfusion/ui";
+import {Component, Frame, EventEmitter, Button} from "@hotfusion/ui";
 import * as SM from "@stripe/stripe-js";
 declare const paypal:any;
 
@@ -20,19 +20,18 @@ export class Paypal extends EventEmitter implements Processor {
     private button    : any;
     private fields    : any;
     recurring : boolean = false
+    private controller : Frame
     constructor(private orderID:string, private keys : {public:string}, private type:"gateway" | "hosted") {
         super();
     }
-    async mount(dom:HTMLElement) {
+    async mount(dom:HTMLElement,controller?:Frame) {
+        this.controller = controller;
         if (!document.getElementById('paypal-sdk')) {
             const script = document.createElement('script');
                   script.id = 'paypal-sdk';
-                  script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD&disable-funding=card,credit`;
+                  script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD`;
                   document.body.appendChild(script);
-
-                  await new Promise(resolve => {
-                     script.onload = resolve;
-                  });
+                  await new Promise(resolve => script.onload = resolve);
         }
         this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom)
         return this;
@@ -48,22 +47,17 @@ export class Paypal extends EventEmitter implements Processor {
             return getComputedStyle(document.body).getPropertyValue(style).trim()
         }
 
-        this.fields = paypal.CardFields({
+        const fields = paypal.CardFields({
             createOrder: async () => {
                 return this.orderID;
             },
             onApprove: ({orderID}) => {
-                /*(<any>this)._complete({
-                    error  : null,
-                    intent : {
-                        id : orderID,
-                        processor: 'paypal'
-                    },
-                    amount : this.amount,
-                });*/
+                this.emit('complete',{
+                    id     : orderID
+                })
             },
-            onError: (e) => {
-                (<any>this)._reject(e)
+            onError: (error) => {
+                this.emit('error',{error})
             },
             style: {
                 'input': {
@@ -97,20 +91,24 @@ export class Paypal extends EventEmitter implements Processor {
                 }
             },
             inputEvents: {
-                onChange: (data) => {
-                    this.emit('change',{complete:data.isFormValid,component:this})
+                onChange: (e) => {
+                    this.controller.setDisabled(!e?.isFormValid)
                 }
             },
         })
 
-        await this.fields.NumberField({ placeholder: '1234 5678 9012 3456'}).render('#card-number')
-        await this.fields.ExpiryField().render('#card-expiry')
-        await this.fields.CVVField().render('#card-cvv');
-
+        await fields.NumberField({ placeholder: '1234 5678 9012 3456'}).render('#card-number')
+        await fields.ExpiryField().render('#card-expiry')
+        await fields.CVVField().render('#card-cvv');
 
         await new Promise(resolve => {
             setTimeout(resolve, 3000);
+        });
+
+        this.controller.getComponent<Button>().on('click', async () => {
+            await fields.submit();
         })
+
         this.emit('mounted',this);
 
         return this;
@@ -118,25 +116,17 @@ export class Paypal extends EventEmitter implements Processor {
     async mountButton(dom:HTMLElement) {
         dom.innerHTML = `<div id="paypal-button" style="width: 100%"/>`;
         this.button = paypal.Buttons({
+            funding: {
+                disallowed: [ paypal.FUNDING.CARD ]
+            },
             createOrder: async () => {
                 return this.orderID;
             },
-            onApprove: async (data, actions) => {
-                /*this.emit('complete',{
-                    error  : null,
-                    amount : this.amount,
-                    intent : {
-                        id        : data.orderID,
-                        client    : data.payerID,
-                        processor : 'paypal'
-                    }
-                })*/
+            onApprove: async ({paymentID}, actions) => {
+                this.emit('complete',{ id : paymentID })
             },
-            onError: (err) => {
-                (<any>this)._reject(err);
-            },
-            onInit: (data, actions) => {
-                this.emit('change', { ready:true, component:this });
+            onError: (error) => {
+                this.emit('error',{error})
             },
             style: {
                 layout : 'vertical',
@@ -157,10 +147,13 @@ export class Stripe extends EventEmitter{
     private elements : any
     private card     : any
     private recurring : any
+    private controller : Frame
     constructor(private orderID:string, private keys : {public:string}) {
         super();
     }
-    async mount(dom:HTMLElement) {
+    async mount(dom:HTMLElement,controller:Frame) {
+        this.controller = controller;
+        this.controller.setDisabled(false);
         await this.mountCard(dom,this.orderID,this.keys)
         return this;
     }
@@ -212,35 +205,42 @@ export class Stripe extends EventEmitter{
         });
 
         this.card = this.elements.create(this.recurring?"card":"payment", {
-            layout: "tabs",
-            wallets: {
-                applePay: 'never',
-                googlePay: 'never',
-                link: 'never',
+            layout  : "tabs",
+            wallets : {
+                applePay  : 'never',
+                googlePay : 'never',
+                link      : 'never'
             },
             style : {
                 base: {
-                    borderRadius :'3px',
-                    height : '30px',
-                    padding : '5px',
-                    boxShadow:'none',
-                    backgroundColor : 'transparent',
-                    fontSize : '14px',
-                    fontFamily:'Roboto',
-                    color:'#222'
+                    borderRadius    : '3px',
+                    height          : '30px',
+                    padding         : '5px',
+                    boxShadow       : 'none',
+                    fontSize        : '14px',
+                    fontFamily      : 'Roboto',
+                    color           : '#222',
+                    backgroundColor : 'transparent'
                 }
             },
-        }).on('ready',() => {
-            setTimeout(() => {
-                this.emit('mounted',this)
-            },700)
-        }).on('change',({complete}) => {
-            this.emit('change',{complete,component:this})
-        })
+        }).on('change',({complete}) => this.controller.setDisabled(!complete))
 
         this.card.mount(dom);
         (<any>dom).firstChild.style.width = '100%';
 
+        this.controller.getComponent<Button>().on('click', async () => {
+            let { error,paymentIntent  } = await stripe.confirmPayment({
+                elements : this.elements,
+                redirect : 'if_required'
+            });
+
+            if(error)
+                return this.emit('error', {error})
+
+            this.emit('complete', {
+                id : paymentIntent.id
+            })
+        })
         return this;
     }
     async charge(){

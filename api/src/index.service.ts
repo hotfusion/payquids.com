@@ -67,6 +67,9 @@ export default class Gateway extends Branches {
     }
     @REST.post()
     async 'charge'(@REST.schema() charge : IGatewayCharge){
+
+
+
         /*let branch = await this.getBranchDocument(charge)
         let processor:any;
 

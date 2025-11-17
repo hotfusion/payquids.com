@@ -147,14 +147,25 @@ export class Application extends Component<any,any>{
                             customer  : this.customer
                         })).output;
 
-                        let MountHostedProcessor = async (type:string,processors:XProcessor[]) => {
+                        let MountHostedProcessor = async (type:string,processors:XProcessor[],button?:Frame) => {
                             for (let i = 0; i < processors.length; i++)
                                 if(processors[i].type === type)
-                                    await new providers[processors[i].provider](processors[i].orderID,processors[i].keys,processors[i].type).mount((type === 'gateway'?GatewayFrame:HostedFrame).getTag())
+                                    (await new providers[processors[i].provider](
+                                        processors[i].orderID,
+                                        processors[i].keys,
+                                        processors[i].type
+                                    ).mount(
+                                         (type === 'gateway'?GatewayFrame:HostedFrame).getTag(),button
+                                    )).on('complete', async (intent:{id : string}) => {
+                                         await Connector.getRoutes().charge({
+                                             id       : intent.id,
+                                             provider : processors[i].provider
+                                         })
+                                    })
                         }
 
                         GatewayFrame.on('mounted', async (frame:Frame) => {
-                            await MountHostedProcessor('gateway',processors);
+                            await MountHostedProcessor('gateway',processors,continueButtonFrame);
 
                             if(HostedFrame.isMounted())
                                  await MountHostedProcessor('hosted',processors);
@@ -162,7 +173,6 @@ export class Application extends Component<any,any>{
                                 await new Promise(resolve => {
                                     HostedFrame.on('mounted', async () => resolve(await MountHostedProcessor('hosted',processors)))
                                 })
-
 
                             continueButtonFrame.setBusy(false)
                             goBackButtonFrame.setVisible(true);
