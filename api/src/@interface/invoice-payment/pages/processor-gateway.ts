@@ -24,17 +24,17 @@ export class Paypal extends EventEmitter implements Processor {
         super();
     }
     async mount(dom:HTMLElement) {
-        let script = document.createElement('script');
-        script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD`;
-        document.body.appendChild(script);
+        if (!document.getElementById('paypal-sdk')) {
+            const script = document.createElement('script');
+                  script.id = 'paypal-sdk';
+                  script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD&disable-funding=card,credit`;
+                  document.body.appendChild(script);
 
-        await new Promise(resolve => {
-            script.onload = async () => {
-                this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom);
-                return resolve(true);
-            }
-        })
-
+                  await new Promise(resolve => {
+                     script.onload = resolve;
+                  });
+        }
+        this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom)
         return this;
     }
     async mountCard(dom:HTMLElement) {
@@ -42,7 +42,6 @@ export class Paypal extends EventEmitter implements Processor {
             = `<label for="card-number">Card Number:</label><div id="card-number"></div>
                <label for="card-cvv">Security Code:</label><div id="card-cvv"></div>
                <label for="card-expiry">Expiration date:</label><div id="card-expiry"></div>`;
-
 
 
         let getRootStyle = (style:string) => {
@@ -110,7 +109,7 @@ export class Paypal extends EventEmitter implements Processor {
 
 
         await new Promise(resolve => {
-            setTimeout(resolve, 5000);
+            setTimeout(resolve, 3000);
         })
         this.emit('mounted',this);
 

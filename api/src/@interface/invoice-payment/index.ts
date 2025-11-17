@@ -147,7 +147,6 @@ export class Application extends Component<any,any>{
                             customer  : this.customer
                         })).output;
 
-                        console.log('processors:',processors)
                         let MountHostedProcessor = async (type:string,processors:XProcessor[]) => {
                             for (let i = 0; i < processors.length; i++)
                                 if(processors[i].type === type)
