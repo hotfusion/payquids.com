@@ -26,17 +26,22 @@ export class Paypal extends EventEmitter implements Processor {
     async mount(dom:HTMLElement) {
         let script = document.createElement('script');
         script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD`;
-        script.onload = async () => {
-            this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom);
-        }
         document.body.appendChild(script);
+
+        await new Promise(resolve => {
+            script.onload = async () => {
+                this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom);
+                return resolve(true);
+            }
+        })
+
         return this;
     }
     async mountCard(dom:HTMLElement) {
         dom.innerHTML
-            = `<label for="card-number">Card Number:</label><div id="card-number"/>
-               <label for="card-cvv">Security Code:</label><div id="card-cvv"/>
-               <label for="card-expiry">Expiration date:</label><div id="card-expiry"/>`;
+            = `<label for="card-number">Card Number:</label><div id="card-number"></div>
+               <label for="card-cvv">Security Code:</label><div id="card-cvv"></div>
+               <label for="card-expiry">Expiration date:</label><div id="card-expiry"></div>`;
 
 
 
@@ -99,10 +104,14 @@ export class Paypal extends EventEmitter implements Processor {
             },
         })
 
-        await this.fields.NumberField({ placeholder: '1234 5678 9012 3456' }).render('#card-number')
+        await this.fields.NumberField({ placeholder: '1234 5678 9012 3456'}).render('#card-number')
         await this.fields.ExpiryField().render('#card-expiry')
         await this.fields.CVVField().render('#card-cvv');
 
+
+        await new Promise(resolve => {
+            setTimeout(resolve, 5000);
+        })
         this.emit('mounted',this);
 
         return this;

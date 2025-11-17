@@ -247,16 +247,16 @@ export default class Gateway extends Branches {
             let orderID:string;
 
             if(processor.provider === 'paypal')
-                orderID = (await new PayPal(branch.mode, 'USD', {
+                orderID = (await new PayPal(branch.mode, {
                     public  : processor.keys[branch.mode].public,
                     private : processor.keys[branch.mode].secret
-                }).capture(intent.amount, intent.customer)).id;
+                },'USD').capture(intent.amount, intent.customer)).id;
 
             if(processor.provider === 'stripe')
-                orderID = (await new Stripe(branch.mode, 'USD', {
+                orderID = (await new Stripe(branch.mode, {
                     public  : processor.keys[branch.mode].public,
                     private : processor.keys[branch.mode].secret
-                }).capture(intent.amount,intent.customer)).id;
+                },'USD').capture(intent.amount,intent.customer)).id;
 
             let keys = {
                 public : processor.keys[branch.mode].public,

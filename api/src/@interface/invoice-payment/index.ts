@@ -92,7 +92,6 @@ export class Application extends Component<any,any>{
             },{
                 id       : 'back',
                 type     : 'button',
-                label    : 'Return',
                 position : 'left-bottom',
                 theme    : 'dark',
                 disabled : true,
@@ -109,11 +108,7 @@ export class Application extends Component<any,any>{
                   class : 'ri-arrow-drop-right-line'
                 },
                 component : () => new ClientInformation(this.getSettings() as any ).on("change", ({complete,customer,amount,invoice}) => {
-                    let continueButtonFrame:Frame
-                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
 
-                    let paymentGatewayTab
-                        = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
 
                     this.amount    = amount;
                     this.invoice   = invoice
@@ -131,72 +126,89 @@ export class Application extends Component<any,any>{
                 align     : 'center',
                 component : () =>  new Component({},{}).on('mounted', async (component:Component) => {
 
-                    let GatewayFrame = new Frame('gateway-frame');
-                    let HostedFrame  = new Frame('hosted-frame').setSize(100);
+                    component.getFrame().findBlockById('gateway-frame')?.remove?.();
+                    component.getFrame().findBlockById('hosted-frame')?.remove?.();
+                    component.getFrame().findBlockById('loading-frame')?.remove?.();
+
+                    let GatewayFrame = new Frame('gateway-frame').setSize(400).setOrientation('horizontal');
+                    let HostedFrame  = new Frame('hosted-frame').setSize(100).setStyle({'align-items':'end'});
+                    let LoadingFrame = new Frame('loading-frame').unstack(true);
+
                     let providers = {
                         paypal : Paypal,
                         stripe : Stripe
                     }
 
-                    let processors:XProcessor[] = (await Connector.getRoutes().intent({
-                        domain    : this.getSettings().domain,
-                        amount    : this.amount,
-                        invoice   : this.invoice,
-                        customer  : this.customer
-                    })).output;
+                    try{
+                        let processors:XProcessor[] = (await Connector.getRoutes().intent({
+                            domain    : this.getSettings().domain,
+                            amount    : this.amount,
+                            invoice   : this.invoice,
+                            customer  : this.customer
+                        })).output;
 
-                    let MountHostedProcessor = async (type:string,processors:XProcessor[]) => {
-                        for (let i = 0; i < processors.length; i++)
-                            if(processors[i].type === type)
-                                await new providers[processors[i].provider](processors[i].orderID,processors[i].keys,processors[i].type).mount((type === 'gateway'?GatewayFrame:HostedFrame).getTag())
+                        console.log('processors:',processors)
+                        let MountHostedProcessor = async (type:string,processors:XProcessor[]) => {
+                            for (let i = 0; i < processors.length; i++)
+                                if(processors[i].type === type)
+                                    await new providers[processors[i].provider](processors[i].orderID,processors[i].keys,processors[i].type).mount((type === 'gateway'?GatewayFrame:HostedFrame).getTag())
+                        }
+
+                        GatewayFrame.on('mounted', async (frame:Frame) => {
+                            await MountHostedProcessor('gateway',processors);
+
+                            if(HostedFrame.isMounted())
+                                 await MountHostedProcessor('hosted',processors);
+                            else
+                                await new Promise(resolve => {
+                                    HostedFrame.on('mounted', async () => resolve(await MountHostedProcessor('hosted',processors)))
+                                })
+
+
+                            continueButtonFrame.setBusy(false)
+                            goBackButtonFrame.setVisible(true);
+                            setTimeout(() => {
+                                LoadingFrame.remove();
+                            })
+                        });
+
+                        await component
+                            .getFrame()
+                            .setOrientation('horizontal')
+                            .push(LoadingFrame,GatewayFrame,HostedFrame);
+
+                        continueButtonFrame.getComponent<any>().on('click',async () => {
+                            continueButtonFrame.setBusy(true);
+
+                            /*let { error,intent } = charge = await Processor.charge()
+
+                            if(!error){
+                                let charge = await Connector.getRoutes().charge({
+                                    domain : this.getSettings().domain,
+                                    id     : intent.id,
+                                    email  : this.customer.email,
+                                    type   : 'processor'
+                                });
+
+                                if(charge.output.completed)
+                                    this.card = charge.output.card
+
+                                clientInformationTab
+                                    .setDisabled(false).setAttribute('completed', 'true');
+                                paymentGatewayTab
+                                    .setDisabled(false).setAttribute('completed', 'true');
+                                receiptTab
+                                    .setDisabled(false).setAttribute('completed', 'true');
+
+                                selectedIndex = 2;
+                                navigator.updateSettings({selectedIndex:2});
+                            }*/
+
+                            // continueButtonFrame.setBusy(false);
+                        });
+                    }catch ({output}){
+                        console.log(output.output)
                     }
-
-                    GatewayFrame.on('mounted', async (frame:Frame) => {
-
-                        await MountHostedProcessor('gateway',processors)
-
-                        if(HostedFrame.isMounted())
-                            return await MountHostedProcessor('hosted',processors);
-
-                        await MountHostedProcessor('hosted',processors);
-                    });
-
-                    await component.getFrame().setOrientation('horizontal').push(GatewayFrame,HostedFrame);
-
-
-                    let continueButtonFrame:Frame
-                        = navigator.getFrame().findBlockById('command-footer-bar').getBlocks()[1].getBlocks()[0];
-
-                    continueButtonFrame.setBusy(false).getComponent<any>().on('click',async () => {
-                        continueButtonFrame.setBusy(true);
-
-                        /*let { error,intent } = charge = await Processor.charge()
-
-                        if(!error){
-                            let charge = await Connector.getRoutes().charge({
-                                domain : this.getSettings().domain,
-                                id     : intent.id,
-                                email  : this.customer.email,
-                                type   : 'processor'
-                            });
-
-                            if(charge.output.completed)
-                                this.card = charge.output.card
-
-                            clientInformationTab
-                                .setDisabled(false).setAttribute('completed', 'true');
-                            paymentGatewayTab
-                                .setDisabled(false).setAttribute('completed', 'true');
-                            receiptTab
-                                .setDisabled(false).setAttribute('completed', 'true');
-
-                            selectedIndex = 2;
-                            navigator.updateSettings({selectedIndex:2});
-                        }*/
-
-                        continueButtonFrame.setBusy(false);
-                    });
-                    goBackButtonFrame.setVisible(true);
 
                 }).on('change', ({complete}) => {
                     let continueButtonFrame:Frame
@@ -250,7 +262,6 @@ export class Application extends Component<any,any>{
                 component : () => new Receipt(this.getSettings() as any).on('mounted',completionMode),
             }]
         }).on('command:click', async (e) => {
-
             // SET BUSY IF NEXT CLICKED
             if(e.item.id === 'next')
                continueButtonFrame.setBusy(true);

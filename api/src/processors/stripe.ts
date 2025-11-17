@@ -4,11 +4,12 @@ export class Stripe {
     private readonly sandbox:any
     constructor(
         private mode : "development" | "production",
-        private currency: "USD" | "CAD",
         private keys:{
             public :string,
             private:string
-        }) {
+        },
+        private currency: "USD" | "CAD" = "USD"
+    ) {
         this.sandbox = new stripe(this.keys.private);
     }
     async setCustomer(customer:{email:string,name?:string,phone?:string}) {

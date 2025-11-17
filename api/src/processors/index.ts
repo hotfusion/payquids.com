@@ -128,19 +128,27 @@ export class Processors extends Invoice {
     @REST.get()
     @Authorization.protect()
     async ':_bid/processors/:_pid/default'({}, ctx:ICTX){
-        await this.source.processors.updateOne({
-            _bid    : new ObjectId(ctx.getParams()._bid),
-            default : true
-        },{
+        let item = {
+            _bid : new ObjectId(ctx.getParams()._bid),
+            _id  : new ObjectId(ctx.getParams()._pid)
+        }
+
+        let {type,provider} = await this.source.processors.findOne(item);
+
+        let update:any = {
+            _bid : new ObjectId(ctx.getParams()._bid), type
+        }
+
+        if(type === "hosted")
+            update.provider = provider;
+
+        await this.source.processors.updateMany(update,{
             $set : {
                 default : false
             }
         })
 
-       return await this.source.processors.updateOne({
-           _bid : new ObjectId(ctx.getParams()._bid),
-           _id  : new ObjectId(ctx.getParams()._pid)
-       },{
+       return await this.source.processors.updateOne(item,{
            $set : {
                default : true
            }

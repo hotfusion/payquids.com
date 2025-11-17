@@ -3,13 +3,16 @@ export class PayPal {
     private readonly sandbox:any
     constructor(
         private mode : "development" | "production",
-        private currency: "USD" | "CAD",
         private keys:{
             public:string,
             private:string
-        }) {
+        },
+        private currency: "USD" | "CAD" = "USD"
+    ) {
         this.sandbox
-            = mode === 'development'?paypal.core.SandboxEnvironment:paypal.core.LiveEnvironment;
+            = this.mode === 'development'?paypal.core.SandboxEnvironment:paypal.core.LiveEnvironment;
+
+        console.log(this.keys,this.mode)
     }
     async capture(amount:number,customer: {email:string}, metadata ?: any): Promise<{id:string}> {
         let client = new paypal.core.PayPalHttpClient(
