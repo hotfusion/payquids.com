@@ -57,8 +57,12 @@ export interface IGatewayIntent {
 }
 
 export interface IGatewayCharge {
-    id       : string
-    provider : string
+    // gateway id
+    _gid       : string
+    // payment id
+    _pid      : string
+    // intent id
+    _iid      : string
 }
 export interface IHosted {
     _id     : string

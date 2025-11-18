@@ -1,15 +1,25 @@
 import {Component, Frame, Input} from "@hotfusion/ui";
 
 interface IReceiptSettings {
-    theme: string;
+    theme    : string;
+    amount   : number;
+    currency : "USD" | "CAD";
+    card     : {
+        last4 ?: number
+    }
+    customer : {
+        email : string;
+        name  : string;
+    }
 }
 export class Receipt extends Component<any,any>{
+    static frame : Frame
     constructor(settings: IReceiptSettings) {
         super(settings,{
             card:false
         });
     }
-    static frame : Frame
+
     async mount(frame: Frame): Promise<this> {
         frame.setOrientation('horizontal');
         Receipt.frame = frame;
@@ -37,21 +47,6 @@ export class Receipt extends Component<any,any>{
             </div>
         `)
 
-
-        /*setTimeout(() => {
-            QRCode.toCanvas(Receipt.frame.getTag().querySelector('.qrcode'), 'sample text', {
-                errorCorrectionLevel: 'H',
-                type: 'image/jpeg',
-                quality: 1,
-                margin: 1,
-                width : 150,
-                scale  : 10,
-                color: {
-                    dark  : "#26292b",
-                    light : "#eaebec"
-                }
-            })
-        })*/
         document.body
             .querySelector('.receipt-header')
             .setAttribute('mounted','true');

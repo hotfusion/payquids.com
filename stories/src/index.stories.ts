@@ -36,6 +36,21 @@ export const Default: Story = {
     }
 };
 
+export const Receipt: Story = {
+    args : {
+        theme  : 'dark',
+        uri    : "http://0.0.0.0:8700/gateway",
+        domain :"digitaladsexp.com",
+        amount : 2,
+        invoice : '453434',
+        client : {
+            name : 'Vadim Korolov',
+            email : 'korolov.vadim@gmai.com',
+            phone : '5149996659'
+        }
+    }
+};
+
 
 
 

@@ -19,7 +19,7 @@ interface IInterfaceSettings {
     }>
 }
 
-interface XProcessor {orderID:string,provider:string,type:string,keys:{public:string}}
+interface XProcessor {orderID:string,provider:string,type:string,keys:{public:string},_gid:string}
 export class Application extends Component<any,any>{
     customer:{name:string,email:string,phone:string}
     card:any
@@ -140,7 +140,7 @@ export class Application extends Component<any,any>{
                     }
 
                     try{
-                        let processors:XProcessor[] = (await Connector.getRoutes().intent({
+                        let Intent:{id:string,processors:XProcessor[]} = (await Connector.getRoutes().intent({
                             domain    : this.getSettings().domain,
                             amount    : this.amount,
                             invoice   : this.invoice,
@@ -156,22 +156,23 @@ export class Application extends Component<any,any>{
                                         processors[i].type
                                     ).mount(
                                          (type === 'gateway'?GatewayFrame:HostedFrame).getTag(),button
-                                    )).on('complete', async (intent:{id : string}) => {
+                                    )).on('complete', async ({id}) => {
                                          await Connector.getRoutes().charge({
-                                             id       : intent.id,
-                                             provider : processors[i].provider
+                                             _pid  : id,
+                                             _iid  : Intent.id,
+                                             _gid  : processors[i]._gid
                                          })
                                     })
                         }
 
                         GatewayFrame.on('mounted', async (frame:Frame) => {
-                            await MountHostedProcessor('gateway',processors,continueButtonFrame);
+                            await MountHostedProcessor('gateway',Intent.processors,continueButtonFrame);
 
                             if(HostedFrame.isMounted())
-                                 await MountHostedProcessor('hosted',processors);
+                                 await MountHostedProcessor('hosted',Intent.processors);
                             else
                                 await new Promise(resolve => {
-                                    HostedFrame.on('mounted', async () => resolve(await MountHostedProcessor('hosted',processors)))
+                                    HostedFrame.on('mounted', async () => resolve(await MountHostedProcessor('hosted',Intent.processors)))
                                 })
 
                             continueButtonFrame.setBusy(false)
@@ -229,7 +230,7 @@ export class Application extends Component<any,any>{
                     //
                     if(!error){
 
-                        let complete = await Connector.getRoutes().charge({
+                        /*let complete = await Connector.getRoutes().charge({
                             domain : this.getSettings().domain,
                             id     : intent.id,
                             email  : this.customer.email,
@@ -242,7 +243,7 @@ export class Application extends Component<any,any>{
                             intent   : intent,
                             error    : error
                         }
-                        console.log('charge:',charge)
+                        console.log('charge:',charge)*/
                        // if(charge.completed)
                             //this.card = charge.card
 

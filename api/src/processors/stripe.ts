@@ -12,6 +12,9 @@ export class Stripe {
     ) {
         this.sandbox = new stripe(this.keys.private);
     }
+    retrieve(paymentId:string):any{
+        return true
+    }
     async setCustomer(customer:{email:string,name?:string,phone?:string}) {
         let list = await this.sandbox.customers.list({
             email: customer.email, limit: 1

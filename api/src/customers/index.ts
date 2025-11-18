@@ -23,6 +23,8 @@ export class DB {
             name : 'branches'
         }, {
             name : 'cards'
+        },{
+            name : 'intents'
         }]
         try {
             console.log("MongoDB connecting to:",uri);

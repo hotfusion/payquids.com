@@ -14,6 +14,17 @@ export class PayPal {
 
         console.log(this.keys,this.mode)
     }
+    async retrieve(paymentId:string):Promise<any>{
+        let client = new paypal.core.PayPalHttpClient(
+            new this.sandbox(this.keys.public, this.keys.private)
+        );
+
+        const request = new paypal.orders.OrdersCaptureRequest(paymentId);
+        request.requestBody({}); // required by SDK even if empty
+        const response = await client.execute(request);
+
+        return response
+    }
     async capture(amount:number,customer: {email:string}, metadata ?: any): Promise<{id:string}> {
         let client = new paypal.core.PayPalHttpClient(
             new this.sandbox(this.keys.public, this.keys.private)

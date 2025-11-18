@@ -4,7 +4,7 @@ import {Branches} from "./branches";
 import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
 import {Stripe} from "./processors/stripe";
 import {PayPal} from "./processors/paypal";
-
+import {ObjectId} from "mongodb";
 export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
 
@@ -68,8 +68,55 @@ export default class Gateway extends Branches {
     @REST.post()
     async 'charge'(@REST.schema() charge : IGatewayCharge){
 
+        let intent = await this.source.intents.findOne({
+            _id : new ObjectId(charge._iid)
+        });
+
+        // make sure the _gid belong to one of the processors were created in intent
+        let _id = intent.processors.find(x => x._gid.toString() === charge._gid)?._gid?.toString?.() || ''
+
+        if(!_id)
+            throw new Error("Wrong processor GID");
+
+        let processor = await this.source.processors.findOne({
+            _bid : intent._bid, _id : new ObjectId(_id)
+        });
+
+        if(!processor)
+            throw new Error("Processor GID was not found");
+
+        let branch
+            = await this.source.branches.findOne({_id : intent._bid});
+
+        let confirmation:any;
+        if(processor.provider === 'paypal')
+            confirmation = await new PayPal(branch.mode, {
+                public  : processor.keys[branch.mode].public,
+                private : processor.keys[branch.mode].secret
+            },'USD').retrieve(charge._pid)
 
 
+        if(processor.provider === 'stripe')
+            confirmation = new Stripe(branch.mode, {
+                public  : processor.keys[branch.mode].public,
+                private : processor.keys[branch.mode].secret
+            },'USD').retrieve(charge._pid)
+
+
+        await this.source.receipts.insertOne({
+            _bid     : branch._id,
+            _pid     : processor._id,
+            _iid     : new ObjectId(charge._iid),
+            //_cid     : customer._id,
+            amount   : intent.amount,
+            created  : new Date().valueOf(),
+            confirmation
+        })
+
+        console.log('confirmation:',confirmation)
+       /* console.log('processor:',processor)
+        console.log('charge:',charge);
+        console.log('intent:',intent);*/
         /*let branch = await this.getBranchDocument(charge)
         let processor:any;
 
@@ -221,7 +268,7 @@ export default class Gateway extends Branches {
         }*/
     }
     @REST.get()
-    async 'intent'(@REST.schema() intent:IGatewayIntent,ctx):Promise<{orderID:string,gateway:string,type:string,keys:{public:string}}[]>{
+    async 'intent'(@REST.schema() intent:IGatewayIntent,ctx):Promise<{id:string,processors:{orderID:string,gateway:string,type:string,keys:{public:string}}[]}>{
 
         let domain
             = ctx.getHeaders().host.split('.').slice(-2).join('.')
@@ -231,7 +278,7 @@ export default class Gateway extends Branches {
 
         if(!branch)
             branch
-                = await this.getBranchDocument({domain:intent.domain});
+                = await this.getBranchDocument({domain:domain = intent.domain});
 
         let gateways = (await this.source.processors.find({
             _bid     : branch._id,
@@ -244,7 +291,8 @@ export default class Gateway extends Branches {
             }]
         }).toArray())
 
-        const processors = []
+        const processors = [];
+
         for(let i = 0; i < gateways.length; i++){
             let processor = gateways[i];
             let orderID:string;
@@ -269,11 +317,19 @@ export default class Gateway extends Branches {
             let type     = processor.type;
 
             processors.push({
-                orderID, keys, provider, type
+                orderID, keys, provider, type, _gid : processor._id
             })
-
         }
-        return processors;
 
+        let {insertedId} = await this.source.intents.insertOne({
+            _bid      : branch._id,
+            mode      : branch.mode,
+            amount    : intent.amount,
+            created   : new Date().valueOf(),
+            completed : false,
+            processors,
+            domain
+        })
+        return {processors,id:insertedId};
     }
 }
