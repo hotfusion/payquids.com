@@ -23,6 +23,14 @@ export class PayPal {
         request.requestBody({}); // required by SDK even if empty
         const response = await client.execute(request);
 
+        let {card} = response.result?.payment_source || {}
+        if(card)
+            response.card = {
+                last4  : card.last_digits,
+                brand  : card.brand.toLowerCase(),
+                expiry : card.expiry
+            }
+
         return response
     }
     async capture(amount:number,customer: {email:string}, metadata ?: any): Promise<{id:string}> {

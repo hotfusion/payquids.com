@@ -3,7 +3,7 @@ import {Paypal,Stripe} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
 //@ts-ignore
 import {Connector} from "@hotfusion/ws/client/index.esm.js";
-import {Button, Component, Frame, Navigator, Utils} from "@hotfusion/ui";
+import {Button, Component, Frame, Navigator, Utils, Dialog} from "@hotfusion/ui";
 import {XBranchMeta} from "../../index.schema";
 
 interface IInterfaceSettings {
@@ -20,9 +20,11 @@ interface IInterfaceSettings {
 }
 
 interface XProcessor {orderID:string,provider:string,type:string,keys:{public:string},_gid:string}
+
+
 export class Application extends Component<any,any>{
     customer:{name:string,email:string,phone:string}
-    card:any
+
     amount:number
     invoice:string
     constructor(settings: IInterfaceSettings) {
@@ -157,13 +159,21 @@ export class Application extends Component<any,any>{
                                     ).mount(
                                          (type === 'gateway'?GatewayFrame:HostedFrame).getTag(),button
                                     )).on('complete', async ({id}) => {
-                                         let {receipt} = await Connector.getRoutes().charge({
+                                         let {output:{receipt}} = await Connector.getRoutes().charge({
                                              _pid  : id,
                                              _iid  : Intent.id,
                                              _gid  : processors[i]._gid
                                          });
 
                                         component.emit('complete',{receipt})
+                                    }).on('error', ({message}) => {
+                                        // console.log({message})
+
+                                        Dialog.exception('Credit Card Denied',message)
+                                        continueButtonFrame.setBusy(false);
+                                        continueButtonFrame.setDisabled(false);
+                                        continueButtonFrame.setAttribute('type','exception');
+                                        goBackButtonFrame.setDisabled(false);
                                     })
                         }
 
@@ -200,7 +210,9 @@ export class Application extends Component<any,any>{
                     continueButtonFrame.setDisabled(!complete)
 
                 }).on('complete',async ({receipt}) => {
-                    console.log('receipt:',receipt)
+
+                    console.log('receipt:',receipt);
+                    (<any>window)._receipt = receipt;
                     //
                     clientInformationTab
                         .setDisabled(false).setAttribute('completed', 'true');
@@ -223,7 +235,10 @@ export class Application extends Component<any,any>{
                     class : 'ri-arrow-drop-right-line'
                 },
                 align     : 'center',
-                component : () => new Receipt(this.getSettings() as any).on('mounted',completionMode),
+                component : () => {
+                    //console.log('this.receipt:',receipt)
+                    return new Receipt((<any>window)._receipt  as any).on('mounted',completionMode)
+                },
             }]
         }).on('command:click', async (e) => {
             // SET BUSY IF NEXT CLICKED

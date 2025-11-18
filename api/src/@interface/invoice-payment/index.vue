@@ -73,7 +73,7 @@ export default defineComponent({
       amount   : 10
     })
 
-    new Body(this.receipt, {
+    new Body(this.manager, {
       width : '400px',
       height : '600px',
 

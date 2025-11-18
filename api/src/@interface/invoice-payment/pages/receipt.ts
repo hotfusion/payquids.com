@@ -19,9 +19,9 @@ import icons from "../../assets/images/payments.png";
 export class Receipt extends Component<any,any>{
     constructor(settings: IReceiptSettings) {
         super(settings,{
-            card:false,
-            customer:false,
-            amount:0,
+            card     : false,
+            customer : false,
+            amount   : 0,
             currency : "USD"
         });
     }
@@ -41,7 +41,7 @@ export class Receipt extends Component<any,any>{
         receiptFrame.setHTML(`
               <div class="receipt">
               <div class="title">
-                     <h1><div class="check">✓</div>Payment Successful!</h1>
+                     <h1>Payment Successful!</h1>
                      <p>Congratulations! Your card was charged successfully for the amount of <span>$${amount.toFixed(2)}</span> ${currency}. Your receipt has been sent to your email <span>${customer.email}</span>.</p>
               </div>
               <div class="amount">$${amount.toFixed(2)}</div>

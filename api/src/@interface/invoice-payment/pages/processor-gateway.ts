@@ -17,10 +17,10 @@ class Processor {
 
 
 export class Paypal extends EventEmitter implements Processor {
-    private button    : any;
-    private fields    : any;
-    recurring : boolean = false
-    private controller : Frame
+    private button : any;
+    private fields : any;
+    private controller : Frame;
+    recurring          : boolean = false;
     constructor(private orderID:string, private keys : {public:string}, private type:"gateway" | "hosted") {
         super();
     }
@@ -33,7 +33,7 @@ export class Paypal extends EventEmitter implements Processor {
                   document.body.appendChild(script);
                   await new Promise(resolve => script.onload = resolve);
         }
-        this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom)
+        this.type === "gateway" ? await this.mountCard(dom) : await this.mountButton(dom);
         return this;
     }
     async mountCard(dom:HTMLElement) {
@@ -56,8 +56,23 @@ export class Paypal extends EventEmitter implements Processor {
                     id     : orderID
                 })
             },
-            onError: (error) => {
-                this.emit('error',{error})
+            onError: ({message}) => {
+                const msg = message || "";
+
+                // split at first newline
+                const parts = msg.split("\n");
+
+                let jsonPart = parts.length > 1 ? parts.slice(1).join("\n") : null;
+
+                let err = null;
+
+                if (jsonPart) {
+                    try {
+                        err = JSON.parse(jsonPart);
+                    } catch {}
+                }
+
+                this.emit('error',{message:err?.message || `UNKNOWN ERROR`})
             },
             style: {
                 'input': {
@@ -106,7 +121,11 @@ export class Paypal extends EventEmitter implements Processor {
         });
 
         this.controller.getComponent<Button>().on('click', async () => {
-            await fields.submit();
+            try{
+                await fields.submit();
+            }catch(e){
+
+            }
         })
 
         this.emit('mounted',this);
@@ -125,8 +144,23 @@ export class Paypal extends EventEmitter implements Processor {
             onApprove: async ({paymentID}, actions) => {
                 this.emit('complete',{ id : paymentID })
             },
-            onError: (error) => {
-                this.emit('error',{error})
+            onError: ({message}) => {
+                const msg = message || "";
+
+                // split at first newline
+                const parts = msg.split("\n");
+
+                let jsonPart = parts.length > 1 ? parts.slice(1).join("\n") : null;
+
+                let err = null;
+
+                if (jsonPart) {
+                    try {
+                        err = JSON.parse(jsonPart);
+                    } catch {}
+                }
+
+                this.emit('error',{message:err?.message || `Card declined. The issuing bank rejected the transaction. Use a different payment method or contact your card provider.`})
             },
             style: {
                 layout : 'vertical',

@@ -103,19 +103,30 @@ export default class Gateway extends Branches {
             },'USD').retrieve(charge._pid)
 
 
+        let {card} = confirmation;
         await this.source.receipts.insertOne({
             _bid     : branch._id,
             _pid     : processor._id,
-            _iid     : new ObjectId(charge._iid),
-            //_cid     : customer._id,
+            _iid     : intent._id,
+            customer : intent.customer,
             amount   : intent.amount,
+            type     : processor.type,
             created  : new Date().valueOf(),
-            confirmation
+            currency : 'USD',
+            response : confirmation.result
         });
 
         return {
             receipt : {
-                amount : intent.amount,
+                amount   : intent.amount,
+                type     : processor.type,
+                customer : intent.customer,
+                currency : 'USD',
+                card     : {
+                    last4  : card?.last4,
+                    brand  : card?.brand,
+                    expiry : card?.expiry
+                }
             }
         }
        /* console.log('processor:',processor)
@@ -314,7 +325,7 @@ export default class Gateway extends Branches {
                 },'USD').capture(intent.amount,intent.customer)).id;
 
             let keys = {
-                public : processor.keys[branch.mode].public,
+                public : processor.keys[branch.mode].public
             }
 
             let provider = processor.provider;
@@ -329,6 +340,7 @@ export default class Gateway extends Branches {
             _bid      : branch._id,
             mode      : branch.mode,
             amount    : intent.amount,
+            customer  : intent.customer,
             created   : new Date().valueOf(),
             completed : false,
             processors,
