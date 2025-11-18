@@ -132,7 +132,7 @@ html,body {
         }
       }
     }
-    .receipt-header {
+    .receipt {
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -140,6 +140,7 @@ html,body {
       margin-top: -20px;
       align-items: start;
       height: 100%;
+      width: 100%;
       * {
         color: var(--color-text);
         font-size: 14px;
@@ -157,6 +158,31 @@ html,body {
           transform: translateY(10px);
           animation: fadeSlideIn 0.6s cubic-bezier(.2,.9,.3,1) forwards;
           animation-delay: 0.2s;
+          p {
+            line-height: 26px;
+            span {
+              color: var(--color-accent);
+            }
+          }
+          h1 {
+            display: flex;
+            gap: 10px;
+            font-size: 16px;
+            align-items: center;
+            div {
+              font-size: 22px;
+            }
+            .check{
+              background-color: var(--color-accent);
+              width: 25px;
+              height: 25px;
+              border-radius: 100%;
+              align-items: center;
+              justify-content: center;
+              display: flex;
+              padding: 0;
+            }
+          }
         }
 
         .amount {
@@ -230,11 +256,17 @@ html,body {
           .last-digits {
             font-size: 22px;
             color: var(--color-accent);
-
+            margin-right: 15px;
             opacity: 0;
             transform: translateY(8px);
             animation: glowIn 0.9s cubic-bezier(.2,.9,.3,1) forwards;
             animation-delay: 1.1s;
+          }
+          .brand {
+            opacity: 0;
+            transform: translateY(8px);
+            animation: glowIn 0.9s cubic-bezier(.2,.9,.3,1) forwards;
+            animation-delay: 0.8s;
           }
         }
         .qrcode-container {
@@ -245,21 +277,6 @@ html,body {
         }
       }
     }
-    .qrcode-container {
-      height: 150px;
-      align-self: start;
-      width: 58%;
-      opacity: 0;
-      div {
-        display: flex;
-        line-height: 20px;
-        margin-top: 5px;
-        margin-bottom: -10px;
-        font-size: 12px;
-        opacity: 0.5;
-      }
-    }
-
     [ouid="form"] {
       [ouid="tabs"]{
         background-color: var(--color-bg-secondary) !important;

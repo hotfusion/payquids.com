@@ -70,7 +70,7 @@ export class Application extends Component<any,any>{
 
             setTimeout(() => {
                 continueButtonFrame.setBusy(false);
-                Receipt.mount(charge,this.card,this.customer);
+               // Receipt.mount(charge,this.card,this.customer);
             },500)
         }
 
@@ -157,11 +157,13 @@ export class Application extends Component<any,any>{
                                     ).mount(
                                          (type === 'gateway'?GatewayFrame:HostedFrame).getTag(),button
                                     )).on('complete', async ({id}) => {
-                                         await Connector.getRoutes().charge({
+                                         let {receipt} = await Connector.getRoutes().charge({
                                              _pid  : id,
                                              _iid  : Intent.id,
                                              _gid  : processors[i]._gid
-                                         })
+                                         });
+
+                                        component.emit('complete',{receipt})
                                     })
                         }
 
@@ -187,35 +189,6 @@ export class Application extends Component<any,any>{
                             .setOrientation('horizontal')
                             .push(LoadingFrame,GatewayFrame,HostedFrame);
 
-                        continueButtonFrame.getComponent<any>().on('click',async () => {
-                            continueButtonFrame.setBusy(true);
-
-                            /*let { error,intent } = charge = await Processor.charge()
-
-                            if(!error){
-                                let charge = await Connector.getRoutes().charge({
-                                    domain : this.getSettings().domain,
-                                    id     : intent.id,
-                                    email  : this.customer.email,
-                                    type   : 'processor'
-                                });
-
-                                if(charge.output.completed)
-                                    this.card = charge.output.card
-
-                                clientInformationTab
-                                    .setDisabled(false).setAttribute('completed', 'true');
-                                paymentGatewayTab
-                                    .setDisabled(false).setAttribute('completed', 'true');
-                                receiptTab
-                                    .setDisabled(false).setAttribute('completed', 'true');
-
-                                selectedIndex = 2;
-                                navigator.updateSettings({selectedIndex:2});
-                            }*/
-
-                            // continueButtonFrame.setBusy(false);
-                        });
                     }catch ({output}){
                         console.log(output.output)
                     }
@@ -226,37 +199,18 @@ export class Application extends Component<any,any>{
 
                     continueButtonFrame.setDisabled(!complete)
 
-                }).on('complete',async ({error,intent}) => {
+                }).on('complete',async ({receipt}) => {
+                    console.log('receipt:',receipt)
                     //
-                    if(!error){
+                    clientInformationTab
+                        .setDisabled(false).setAttribute('completed', 'true');
+                    paymentGatewayTab
+                        .setDisabled(false).setAttribute('completed', 'true');
+                    receiptTab
+                        .setDisabled(false).setAttribute('completed', 'true');
 
-                        /*let complete = await Connector.getRoutes().charge({
-                            domain : this.getSettings().domain,
-                            id     : intent.id,
-                            email  : this.customer.email,
-                            type   : 'hosted',
-                            name   : 'paypal'
-                        })
-                        charge = {
-                            amount   : this.getSettings().amount,
-                            currency : 'USD',
-                            intent   : intent,
-                            error    : error
-                        }
-                        console.log('charge:',charge)*/
-                       // if(charge.completed)
-                            //this.card = charge.card
-
-                        clientInformationTab
-                            .setDisabled(false).setAttribute('completed', 'true');
-                        paymentGatewayTab
-                            .setDisabled(false).setAttribute('completed', 'true');
-                        receiptTab
-                            .setDisabled(false).setAttribute('completed', 'true');
-
-                        selectedIndex = 2;
-                        navigator.updateSettings({selectedIndex:2});
-                    }
+                    selectedIndex = 2;
+                    navigator.updateSettings({selectedIndex:2});
 
                     continueButtonFrame.setBusy(false);
                 })

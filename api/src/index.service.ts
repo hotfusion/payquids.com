@@ -111,9 +111,13 @@ export default class Gateway extends Branches {
             amount   : intent.amount,
             created  : new Date().valueOf(),
             confirmation
-        })
+        });
 
-        console.log('confirmation:',confirmation)
+        return {
+            receipt : {
+                amount : intent.amount,
+            }
+        }
        /* console.log('processor:',processor)
         console.log('charge:',charge);
         console.log('intent:',intent);*/

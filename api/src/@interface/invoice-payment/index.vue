@@ -1,5 +1,6 @@
 <script lang="ts">
 import {Application} from "./index";
+import {Receipt} from "./pages/receipt";
 
 //s
 import {Frame,Body} from "@hotfusion/ui";
@@ -58,9 +59,21 @@ export default defineComponent({
         email   : this?.client?.email,
         phone   : this?.client?.phone
       }
+    });
+
+
+    this.receipt = new Receipt({
+      card: {
+        last4 : '9999',
+        brand : 'mastercard'
+      },
+      currency: undefined,
+      theme: "dark",
+      customer : this?.client,
+      amount   : 10
     })
 
-    new Body(this.manager, {
+    new Body(this.receipt, {
       width : '400px',
       height : '600px',
 
