@@ -66,7 +66,7 @@ export const Receipt: Story = {
             customer : customer,
             card : {
                 last4 : '9999',
-                brand : 'americanexpress'
+                brand : 'visa'
             },
             profile : {
                 email    : customer.email,

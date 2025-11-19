@@ -1,8 +1,6 @@
+
 <script lang="ts">
 import {Application} from "./index";
-import {Receipt} from "./pages/receipt";
-
-//s
 import {Frame,Body} from "@hotfusion/ui";
 import {Connector} from '@hotfusion/ws/client/index.esm.js';
 import { defineComponent } from 'vue';
@@ -45,6 +43,9 @@ export default defineComponent({
       document.body.setAttribute('theme', theme);
     }
   },
+  beforeMount() {
+      document.head.innerHTML = document.head.innerHTML + `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">`;
+  },
   async mounted() {
     document.body.setAttribute('theme', 'dark');
     this.connector  = await Connector.connect(this.uri);
@@ -66,12 +67,13 @@ export default defineComponent({
       }
     });
 
-    new Body(this.manager, {
-      width : '400px',
+    let Browser = Body.getBrowser();
+    new Body(this.manager, Browser.isMobile()?{}:{
+      width  : '400px',
       height : '600px',
 
-    }).on('ready', async (body) => {
-
+    }).on('ready', async (body:Frame) => {
+      body.setAttribute('mobile',Browser.isMobile())
     });
 
   },

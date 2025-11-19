@@ -1,6 +1,7 @@
 import {ClientInformation} from "./pages/client-information";
 import {Paypal,Stripe} from "./pages/processor-gateway";
 import {Receipt} from "./pages/receipt";
+import {Browser} from "@hotfusion/ui";
 //@ts-ignore
 import {Connector} from "@hotfusion/ws/client/index.esm.js";
 import {Button, Component, Frame, Navigator, Utils, Dialog} from "@hotfusion/ui";
@@ -76,7 +77,8 @@ export class Application extends Component<any,any>{
                 label    : `Return to ${this.getSettings().domain}`
             });
 
-            goBackButtonFrame.setVisible(false);
+            goBackButtonFrame.setVisible(Browser.isMobile());
+            goBackButtonFrame.setDisabled(true);
             paymentGatewayTab.setDisabled(false);
             receiptTab.setDisabled(false);
 
@@ -95,22 +97,20 @@ export class Application extends Component<any,any>{
                 type     : 'button',
                 label    : 'Continue',
                 position : 'right-bottom',
+                highlight : Browser.isMobile(),
                 theme    : 'dark',
                 disabled : true,
-                icon     : {
+                icon     : Browser.isMobile()?false:{
                     class : 'ri-arrow-drop-right-line',
                     position : 'right'
                 }
             },{
                 id       : 'back',
                 type     : 'button',
+                label    : 'Go Back',
                 position : 'left-bottom',
                 theme    : 'dark',
-                disabled : true,
-                icon     : {
-                    class : 'ri-arrow-drop-left-line',
-                    position : 'left'
-                }
+                disabled : true
             }],
             components : [{
                 id        : 'client-information-tab',
@@ -175,8 +175,6 @@ export class Application extends Component<any,any>{
 
                                         component.emit('complete',{receipt});
                                     }).on('error', async ({message}) => {
-                                         Dialog.exception('Credit Card Denied',message);
-
                                         continueButtonFrame.setBusy(false).setAttribute('type','exception');
                                         goBackButtonFrame.setDisabled(false);
 
@@ -186,6 +184,8 @@ export class Application extends Component<any,any>{
                                                 disabled  : false
                                             });
                                             await button.render();
+
+                                        await Dialog.exception('Credit Card Denied',message);
                                     })
                         }
 
@@ -283,7 +283,7 @@ export class Application extends Component<any,any>{
                     .setDisabled(true).setAttribute('completed', 'false');
 
                 goBackButtonFrame
-                    .setVisible(false);
+                    .setVisible(Browser.isMobile());
                 continueButtonFrame
                     .setDisabled(true);
             }
@@ -333,7 +333,7 @@ export class Application extends Component<any,any>{
             clientInformationTab.setDisabled(false);
             paymentGatewayTab.setDisabled(true);
             receiptTab.setDisabled(true);
-            goBackButtonFrame.setVisible(false);
+            goBackButtonFrame.setVisible(Browser.isMobile());
         })
 
 
