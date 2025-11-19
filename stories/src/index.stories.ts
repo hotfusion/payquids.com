@@ -41,17 +41,18 @@ const customers = [
     { "name": "George Lawson", "email": "george.lawson@example.com", "phone": "+1-509-555-7844" },
     { "name": "Monica Reyes", "email": "monica.reyes@example.com", "phone": "+1-615-555-9910" }
 ]
+let customer = customers[Math.floor(Math.random() * 21)]
 export default meta;
 type Story = StoryObj<typeof meta>;
-let customer = customers[0]
+
 export const Default: Story = {
     args : {
         theme   : 'dark',
         uri     : "http://0.0.0.0:8700/gateway",
         domain  :"digitaladsexp.com",
-        amount  : 2,
-        invoice : '453434',
-        client  : customer
+        //amount  : 2,
+        //invoice : '453434',
+        //client  : customer
     }
 };
 

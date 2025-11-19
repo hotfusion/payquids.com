@@ -199,6 +199,7 @@ export class Stripe extends EventEmitter  implements Processor{
     async mount(dom:HTMLElement,controller?:Frame) {
         this.controller = controller;
         this.controller.setDisabled(false);
+        dom.style.padding = '20px 0'
         await this.mountCard(dom,this.orderID,this.keys)
         return this;
     }

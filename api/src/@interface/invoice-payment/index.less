@@ -29,6 +29,22 @@ html,body {
         height: auto !important;
       }
     }
+    [ouid="tabs"]{
+      > :nth-child(1) {
+        [ouid="tab:button"] {
+          > [ouid="container"] {
+            justify-content: start !important;
+          }
+        }
+      }
+      > :nth-child(3) {
+        [ouid="tab:button"] {
+          > [ouid="container"] {
+            justify-content: end !important;
+          }
+        }
+      }
+    }
     [ouid="command-footer-bar"]{
       flex-direction: column-reverse !important;
       [ouid="container-right"],[ouid="container-left"]{
