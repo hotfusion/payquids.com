@@ -29,6 +29,10 @@ export default defineComponent({
     },
     invoice : {
       type : String
+    },
+    receipt : {
+      type    : Object,
+      default : () => {}
     }
   },
   data() {
@@ -54,24 +58,13 @@ export default defineComponent({
       domain    : this.domain,
       amount    : this.amount,
       invoice   : this.invoice,
+      receipt   : this.receipt,
       client    : {
         name    : this?.client?.name,
         email   : this?.client?.email,
         phone   : this?.client?.phone
       }
     });
-
-
-    this.receipt = new Receipt({
-      card: {
-        last4 : '9999',
-        brand : 'mastercard'
-      },
-      currency: undefined,
-      theme: "dark",
-      customer : this?.client,
-      amount   : 10
-    })
 
     new Body(this.manager, {
       width : '400px',

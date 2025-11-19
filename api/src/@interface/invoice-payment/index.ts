@@ -12,6 +12,10 @@ interface IInterfaceSettings {
     connector : Connector
     invoice   : string;
     amount    : number;
+    receipt   : {
+        amount : number;
+        customer : IInterfaceSettings['client']
+    }
     client   ?: Partial<{
         name    : string;
         email   : string;
@@ -33,7 +37,8 @@ export class Application extends Component<any,any>{
             domain : '',
             client : false,
             amount : 0,
-            invoice : false
+            invoice : false,
+            receipt : false,
         });
     }
     async mount(frame: Frame) : Promise<this> {
@@ -51,7 +56,12 @@ export class Application extends Component<any,any>{
         let branch:XBranchMeta
             = Utils.decodeJwt(meta);
 
-        let selectedIndex = 0, charge:{amount:number, currency:string | boolean,intent:any,error:any };
+        let selectedIndex = 0;
+
+        if(this.getSettings().receipt.amount) {
+            (<any>window)._receipt = this.getSettings().receipt;
+            selectedIndex = 2;
+        }
 
         let completionMode = () => {
             let paymentGatewayTab         = navigator.getFrame().findBlockById('tab:payment-gateway-tab');
@@ -110,8 +120,6 @@ export class Application extends Component<any,any>{
                   class : 'ri-arrow-drop-right-line'
                 },
                 component : () => new ClientInformation(this.getSettings() as any ).on("change", ({complete,customer,amount,invoice}) => {
-
-
                     this.amount    = amount;
                     this.invoice   = invoice
                     this.customer  = customer;
@@ -165,15 +173,19 @@ export class Application extends Component<any,any>{
                                              _gid  : processors[i]._gid
                                          });
 
-                                        component.emit('complete',{receipt})
-                                    }).on('error', ({message}) => {
-                                        // console.log({message})
+                                        component.emit('complete',{receipt});
+                                    }).on('error', async ({message}) => {
+                                         Dialog.exception('Credit Card Denied',message);
 
-                                        Dialog.exception('Credit Card Denied',message)
-                                        continueButtonFrame.setBusy(false);
-                                        continueButtonFrame.setDisabled(false);
-                                        continueButtonFrame.setAttribute('type','exception');
+                                        continueButtonFrame.setBusy(false).setAttribute('type','exception');
                                         goBackButtonFrame.setDisabled(false);
+
+                                        let button = continueButtonFrame.getComponent<Button>()
+                                            button.updateSettings({
+                                                label     : 'Try Again!',
+                                                disabled  : false
+                                            });
+                                            await button.render();
                                     })
                         }
 
@@ -210,9 +222,14 @@ export class Application extends Component<any,any>{
                     continueButtonFrame.setDisabled(!complete)
 
                 }).on('complete',async ({receipt}) => {
-
-                    console.log('receipt:',receipt);
                     (<any>window)._receipt = receipt;
+                    let button = continueButtonFrame.getComponent<Button>()
+                        button.updateSettings({
+                            label     : 'Go Back to Merchant',
+                            disabled  : false
+                        });
+                        await button.render();
+
                     //
                     clientInformationTab
                         .setDisabled(false).setAttribute('completed', 'true');

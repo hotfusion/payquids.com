@@ -136,7 +136,7 @@ html,body {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding: 20px 0;
+      padding: 10px;
       margin-top: -20px;
       align-items: start;
       height: 100%;
@@ -200,7 +200,6 @@ html,body {
           gap: 5px;
           justify-content: start;
           width: 100%;
-
           /* animate invoice row as a block */
           opacity: 0;
           transform: translateY(10px);
@@ -256,7 +255,7 @@ html,body {
           .last-digits {
             font-size: 22px;
             color: var(--color-accent);
-            margin-right: 15px;
+
             opacity: 0;
             transform: translateY(8px);
             animation: glowIn 0.9s cubic-bezier(.2,.9,.3,1) forwards;
@@ -267,6 +266,7 @@ html,body {
             transform: translateY(8px);
             animation: glowIn 0.9s cubic-bezier(.2,.9,.3,1) forwards;
             animation-delay: 0.8s;
+            margin-left: 5px;
           }
         }
         .qrcode-container {
@@ -317,7 +317,7 @@ html,body {
 
     [ouid="toolbar-item"]{
       &[component="button"]{
-        width: 120px !important;
+        min-width: 40px;
         [ouid="label"]{
           justify-content: center;
         }

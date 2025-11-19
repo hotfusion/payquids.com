@@ -31,10 +31,12 @@ export class Receipt extends Component<any,any>{
         frame.setOrientation('horizontal');
 
         let icons = {
-            visa       : '<img class="brand" height="42" width="42" src="https://cdn.simpleicons.org/visa/474ec9?viewbox=auto"        alt=""/>',
-            mastercard : '<img class="brand" height="42" width="32" src="https://cdn.simpleicons.org/mastercard/EB001B?viewbox=auto"  alt=""/>',
-            discover   : '<img class="brand" height="42" width="62" src="https://cdn.simpleicons.org/discover/FF6000?viewbox=auto"    alt=""/>',
-            paypal     : '<img class="brand" height="42" width="22" src="https://cdn.simpleicons.org/paypal/fff?viewbox=auto"    alt=""/>'
+            visa            : '<img class="brand" width="42" src="https://cdn.simpleicons.org/visa/474ec9?viewbox=auto"           alt=""/>',
+            mastercard      : '<img class="brand" width="32" src="https://cdn.simpleicons.org/mastercard/EB001B?viewbox=auto"     alt=""/>',
+            discover        : '<img class="brand" width="62" src="https://cdn.simpleicons.org/discover/FF6000?viewbox=auto"       alt=""/>',
+            paypal          : '<img class="brand" width="22" src="https://cdn.simpleicons.org/paypal/fff?viewbox=auto"            alt=""/>',
+            dinersclub      : '<img class="brand" width="32" src="https://cdn.simpleicons.org/dinersclub/004C97?viewbox=auto"     alt=""/>',
+            americanexpress : '<img class="brand"  width="22" src="https://cdn.simpleicons.org/americanexpress/fff?viewbox=auto"  alt=""/>'
         }
 
         let receiptFrame = new Frame('receipt-frame')
