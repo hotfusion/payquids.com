@@ -21,7 +21,7 @@ export class Paypal extends EventEmitter implements Processor {
     private fields : any;
     private controller : Frame;
     recurring          : boolean = false;
-    constructor(private orderID:string, private keys : {public:string}, private type:"gateway" | "hosted",private disabled?:string[]) {
+    constructor(private orderID:string, private keys : {public:string}, private type:"gateway" | "hosted",private disabled?:string[],private currency?:'USD' | 'CAD') {
         super();
 
         // we need to disallow the card if the default gateway is not paypal otherwise there will be a debit card button under paypal button

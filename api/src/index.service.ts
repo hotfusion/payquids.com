@@ -23,6 +23,20 @@ export default class Gateway extends Branches {
             domain : ctx.getParams().domain
         }
     }
+
+    private maskEmail(email:string) {
+        const [local, domain] = email.split('@');
+        if (!domain) return '';
+
+        const maskedLocal = local.length <= 2
+            ? '*'.repeat(local.length)
+            : local[0] + '*'.repeat(local.length - 2) + local[local.length - 1];
+
+        const [name, tld] = domain.split('.');
+        const maskedDomain = '*'.repeat(name.length) + '.' + tld;
+
+        return maskedLocal + '@' + maskedDomain;
+    }
     private async getBranchDocument(query:{domain:string}){
         let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
         if(!branch)
@@ -93,17 +107,19 @@ export default class Gateway extends Branches {
             confirmation = await new PayPal(branch.mode, {
                 public  : processor.keys[branch.mode].public,
                 private : processor.keys[branch.mode].secret
-            },'USD').retrieve(charge._pid)
+            },intent.currency ).retrieve(charge._pid)
 
 
         if(processor.provider === 'stripe')
-            confirmation = new Stripe(branch.mode, {
+            confirmation = await new Stripe(branch.mode, {
                 public  : processor.keys[branch.mode].public,
                 private : processor.keys[branch.mode].secret
-            },'USD').retrieve(charge._pid)
+            },intent.currency).retrieve(charge._pid)
 
 
-        let {card} = confirmation;
+        let {card,profile,result}
+              = confirmation;
+
         await this.source.receipts.insertOne({
             _bid     : branch._id,
             _pid     : processor._id,
@@ -111,9 +127,11 @@ export default class Gateway extends Branches {
             customer : intent.customer,
             amount   : intent.amount,
             type     : processor.type,
+            card     : card,
+            profile  : profile,
             created  : new Date().valueOf(),
             currency : 'USD',
-            response : confirmation.result
+            response : result
         });
 
         return {
@@ -122,11 +140,14 @@ export default class Gateway extends Branches {
                 type     : processor.type,
                 customer : intent.customer,
                 currency : 'USD',
-                card     : {
+                card     : card?{
                     last4  : card?.last4,
                     brand  : card?.brand,
                     expiry : card?.expiry
-                }
+                }:null,
+                profile    : profile?{
+                    email : this.maskEmail(profile.email),
+                }:null,
             }
         }
        /* console.log('processor:',processor)
@@ -285,6 +306,10 @@ export default class Gateway extends Branches {
     @REST.get()
     async 'intent'(@REST.schema() intent:IGatewayIntent,ctx):Promise<{id:string,processors:{orderID:string,gateway:string,type:string,keys:{public:string}}[]}>{
 
+        console.log('intent:',intent)
+        let currency:'USD' | 'CAD'
+            = intent.currency as any || 'USD';
+
         let domain
             = ctx.getHeaders().host.split('.').slice(-2).join('.')
 
@@ -316,13 +341,13 @@ export default class Gateway extends Branches {
                 orderID = (await new PayPal(branch.mode, {
                     public  : processor.keys[branch.mode].public,
                     private : processor.keys[branch.mode].secret
-                },'USD').capture(intent.amount, intent.customer)).id;
+                },currency).capture(intent.amount, intent.customer)).id;
 
             if(processor.provider === 'stripe')
                 orderID = (await new Stripe(branch.mode, {
                     public  : processor.keys[branch.mode].public,
                     private : processor.keys[branch.mode].secret
-                },'USD').capture(intent.amount,intent.customer)).id;
+                },currency).capture(intent.amount,intent.customer)).id;
 
             let keys = {
                 public : processor.keys[branch.mode].public
@@ -336,7 +361,7 @@ export default class Gateway extends Branches {
             })
         }
 
-        let {insertedId} = await this.source.intents.insertOne({
+        let { insertedId } = await this.source.intents.insertOne({
             _bid      : branch._id,
             mode      : branch.mode,
             amount    : intent.amount,
@@ -344,8 +369,10 @@ export default class Gateway extends Branches {
             created   : new Date().valueOf(),
             completed : false,
             processors,
-            domain
-        })
-        return {processors,id:insertedId};
+            domain,
+            currency  : currency || 'USD'
+        });
+
+        return { processors, id:insertedId };
     }
 }

@@ -7,11 +7,14 @@ interface IReceiptSettings {
     card     : {
         last4 ?: string
         brand ?: string
-    }
+    } | null
     customer : {
         email : string;
         name  : string;
     }
+    profile : {
+        email : string;
+    } | null
 }
 //@ts-ignore
 import icons from "../../assets/images/payments.png";
@@ -21,13 +24,15 @@ export class Receipt extends Component<any,any>{
         super(settings,{
             card     : false,
             customer : false,
+            profile  : false,
             amount   : 0,
             currency : "USD"
         });
     }
 
     async mount(frame: Frame): Promise<this> {
-        let {amount,customer,card,currency} = this.getSettings()
+        console.log('this.getSettings():',this.getSettings())
+        let {amount,customer,card,currency,profile} = this.getSettings()
         frame.setOrientation('horizontal');
 
         let icons = {
@@ -49,8 +54,9 @@ export class Receipt extends Component<any,any>{
               <div class="amount">$${amount.toFixed(2)}</div>
               <div class="details">
                  <span class="name">${customer.name}</span>
-                 <span class="digits" style="display: ${card?.last4?'block':'none'}">**** **** ****</span> 
+                 <span class="digits" style="display: ${card?.last4?'block':'none'}">**** **** ****</span>
                  <span class="last-digits" style="display: ${card?.last4?'block':'none'}">${card?.last4}</span>
+                 <span class="email"       style="display: ${profile?.email?'block':'none'}">${profile?.email}</span>
                  ${icons[card?.brand]?icons[card?.brand]:''}
               </div>
               

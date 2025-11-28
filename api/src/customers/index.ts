@@ -1,61 +1,10 @@
-import {Authorization, Controller, REST} from "@hotfusion/ws"
-import {URIParser,Arguments} from "@hotfusion/ws/utils"
+import {Authorization, REST} from "@hotfusion/ws"
 import {ObjectId} from "mongodb";
 import type {ICustomer, ICustomerProcessorProfile} from "../index.schema";
-import {MongoClient} from "mongodb";
+import {DB} from "../index";
 interface ICTX {
     [key: string]: any
 }
-export class DB {
-    protected session = []
-    protected source:{[key:string]: any} = {};
-    @Controller.on("mounted")
-    async mounted(){
-        let uri = Arguments.db;
-        let connection  = new MongoClient(uri);
-        let collections = [{
-            name : 'customers'
-        }, {
-            name : 'receipts'
-        }, {
-            name : 'processors'
-        }, {
-            name : 'branches'
-        }, {
-            name : 'cards'
-        },{
-            name : 'intents'
-        }]
-        try {
-            console.log("MongoDB connecting to:",uri);
-
-            await connection.connect();
-
-            let source
-                = connection.db(URIParser(uri).database);
-
-            for (const {name} of collections) {
-                console.log(`- MongoDB collection created [${name}]`);
-
-                let exists
-                    = await source.listCollections({ name }).hasNext();
-
-                if (!exists) {
-                    await source.createCollection(name);
-                    console.log(`📂 Created collection: ${name}`);
-                }
-                this.source[name]
-                    = source.collection(name);
-            }
-            console.log("MongoDB connected!");
-            return this;
-        } catch (err) {
-            console.error('❌ MongoDB connection failed:', err);
-            throw err;
-        }
-    }
-}
-
 
 export class Customers extends  DB {
     @REST.post()

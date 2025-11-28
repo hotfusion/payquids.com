@@ -49,10 +49,11 @@ export interface IGatewayIntent {
     domain  ?: string
     amount   : number
     invoice  : string
+    currency : 'USD' | 'CAD'
     customer : {
-        name ?:string
-        email :string
-        phone ?:string
+        email  : string
+        name  ?: string
+        phone ?: string
     }
 }
 

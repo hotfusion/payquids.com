@@ -31,6 +31,10 @@ export default defineComponent({
     receipt : {
       type    : Object,
       default : () => {}
+    },
+    currency: {
+      type     : String,
+      default  : 'USD'
     }
   },
   data() {
@@ -60,6 +64,7 @@ export default defineComponent({
       amount    : this.amount,
       invoice   : this.invoice,
       receipt   : this.receipt,
+      currency  : this.currency,
       client    : {
         name    : this?.client?.name,
         email   : this?.client?.email,

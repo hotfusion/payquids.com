@@ -12,18 +12,19 @@ export class PayPal {
         this.sandbox
             = this.mode === 'development'?paypal.core.SandboxEnvironment:paypal.core.LiveEnvironment;
 
-        console.log(this.keys,this.mode)
     }
     async retrieve(paymentId:string):Promise<any>{
         let client = new paypal.core.PayPalHttpClient(
             new this.sandbox(this.keys.public, this.keys.private)
         );
 
-        const request = new paypal.orders.OrdersCaptureRequest(paymentId);
-        request.requestBody({}); // required by SDK even if empty
-        const response = await client.execute(request);
+        let request = new paypal.orders.OrdersCaptureRequest(paymentId);
+            request.requestBody({}); // required by SDK even if empty
+        let response = await client.execute(request);
 
-        let {card} = response.result?.payment_source || {}
+        let {card}
+            = response.result?.payment_source || null
+
         if(card)
             response.card = {
                 last4  : card.last_digits,
@@ -31,6 +32,16 @@ export class PayPal {
                 expiry : card.expiry
             }
 
+        let {email_address,name,payer_id}
+                  = response.result.payer || null;
+
+        if(email_address)
+            response.profile = {
+                id       : payer_id,
+                email    : email_address,
+                name     : name,
+                provider : 'paypal'
+            }
         return response
     }
     async capture(amount:number,customer: {email:string}, metadata ?: any): Promise<{id:string}> {

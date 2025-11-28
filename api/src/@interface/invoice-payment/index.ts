@@ -13,6 +13,7 @@ interface IInterfaceSettings {
     connector : Connector
     invoice   : string;
     amount    : number;
+    currency  : 'USD' | 'CAD'
     receipt   : {
         amount : number;
         customer : IInterfaceSettings['client']
@@ -34,12 +35,13 @@ export class Application extends Component<any,any>{
     invoice:string
     constructor(settings: IInterfaceSettings) {
         super(settings || {},{
-            theme  : 'default',
-            domain : '',
-            client : false,
-            amount : 0,
-            invoice : false,
-            receipt : false,
+            theme    : 'default',
+            domain   : '',
+            client   : false,
+            amount   : 0,
+            invoice  : false,
+            receipt  : false,
+            currency : 'USD'
         });
     }
     async mount(frame: Frame) : Promise<this> {
@@ -47,15 +49,13 @@ export class Application extends Component<any,any>{
             domain : this.getSettings().domain
         })).output;
 
-
         let goBackButtonFrame:Frame,
             continueButtonFrame:Frame,
             clientInformationTab:Frame,
             paymentGatewayTab:Frame,
             receiptTab:Frame
 
-        let branch:XBranchMeta
-            = Utils.decodeJwt(meta);
+        // let branch:XBranchMeta = Utils.decodeJwt(meta);
 
         let selectedIndex = 0;
 
@@ -151,10 +151,11 @@ export class Application extends Component<any,any>{
 
                     try{
                         let Intent:{id:string,processors:XProcessor[]} = (await Connector.getRoutes().intent({
-                            domain    : this.getSettings().domain,
-                            amount    : this.amount,
-                            invoice   : this.invoice,
-                            customer  : this.customer
+                            domain   : this.getSettings().domain,
+                            currency : this.getSettings().currency,
+                            amount   : this.amount,
+                            invoice  : this.invoice,
+                            customer : this.customer
                         })).output;
 
                         let MountHostedProcessor = async (type:string,processors:XProcessor[],button?:Frame) => {
@@ -163,7 +164,9 @@ export class Application extends Component<any,any>{
                                     (await new providers[processors[i].provider](
                                         processors[i].orderID,
                                         processors[i].keys,
-                                        processors[i].type
+                                        processors[i].type,
+                                        [],
+                                        this.getSettings().currency
                                     ).mount(
                                          (type === 'gateway'?GatewayFrame:HostedFrame).getTag(),button
                                     )).on('complete', async ({id}) => {
