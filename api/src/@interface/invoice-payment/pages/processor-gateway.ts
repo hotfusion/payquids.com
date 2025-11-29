@@ -34,13 +34,15 @@ export class Paypal extends EventEmitter implements Processor {
         this.controller = controller;
 
         // if PayPal is not contain gateway process, its mean the default processor is not a paypal!
-        if(!Paypal.isPayPalDefault)
+        if(!Paypal.isPayPalDefault) {
             this.disabled.push('card');
+            this.disabled.push('paylater');
+        }
 
         if (!document.getElementById('paypal-sdk')) {
             const script = document.createElement('script');
                   script.id = 'paypal-sdk';
-                  script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=USD`;
+                  script.src = `https://www.paypal.com/sdk/js?client-id=${this.keys.public}&components=card-fields,buttons&intent=capture&currency=${this.currency}`;
                   if(this.disabled?.length)
                       script.src = script.src + '&disable-funding=' + this.disabled.join(',');
 
@@ -86,7 +88,7 @@ export class Paypal extends EventEmitter implements Processor {
                     } catch {}
                 }
 
-                this.emit('error',{message:err?.message || `UNKNOWN ERROR`})
+                this.emit('error',{ message : err?.message || `UNKNOWN ERROR`})
             },
             style: {
                 'input': {
