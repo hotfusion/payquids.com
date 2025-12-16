@@ -118,40 +118,14 @@ export interface ICustomer {
     name    ?: TString<{min:10,max:100}>;
     address ?: TString<{min:10,max:100}>;
     phone   ?: TString<{min:10,max:100}>;
-    profiles : {
-        id   : string,
-        _pid : string
-    }[];
 }
-interface IMerchant {
-    name: string;
-    address: string;
-    phone: string;
-    email: string;
-}
-interface IServiceItem {
-    service: string;
-    description: string;
-    hours: number;
-    rate: number;
-}
-export interface IDimaInterface{
-    test : string;
-    name : string;
-}
-interface IProductItem {
-    product: string;
-    price: number;
-    quantity: number;
-}
-interface ICollectorItem {
-    service: string;
-    description: string;
-    amount: number;
-}
-interface IPolicy {
-    policy: string;
-    value: string;
+export interface ICompany {
+    _id      : string;
+    _bid     : string;
+    email    : TString<{min:10,max:100}>;
+    name    ?: TString<{min:10,max:100}>;
+    address ?: TString<{min:10,max:100}>;
+    phone   ?: TString<{min:10,max:100}>;
 }
 
 export interface IInvoice {
@@ -209,4 +183,32 @@ export type ICollections = {
         exp_month : string
         exp_year  : string
     }[]
+}
+
+
+interface IProductItem {
+    product: string;
+    price: number;
+    quantity: number;
+}
+interface ICollectorItem {
+    service: string;
+    description: string;
+    amount: number;
+}
+interface IPolicy {
+    policy: string;
+    value: string;
+}
+interface IMerchant {
+    name: string;
+    address: string;
+    phone: string;
+    email: string;
+}
+interface IServiceItem {
+    service: string;
+    description: string;
+    hours: number;
+    rate: number;
 }

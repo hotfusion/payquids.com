@@ -24,6 +24,8 @@ export class DB {
             name : 'cards'
         },{
             name : 'intents'
+        },{
+            name : 'companies'
         }]
         try {
             //console.log("MongoDB connecting to:",'mongodb://root:example@mongo:27017/payquids?authSource=admin');

@@ -1,5 +1,5 @@
 import {Authorization, REST} from "@hotfusion/ws";
-import {IBranch, IDimaInterface, IPagination, IProcessor} from "../index.schema";
+import {IBranch, IPagination, IProcessor} from "../index.schema";
 import {ObjectId} from "mongodb";
 import {Processors} from "../processors";
 interface ICTX {

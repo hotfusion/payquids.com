@@ -5,6 +5,50 @@ import {JWT,Crypto,Arguments} from "@hotfusion/ws/utils"
 import {Stripe} from "./processors/stripe";
 import {PayPal} from "./processors/paypal";
 import {ObjectId} from "mongodb";
+
+class Utils {
+    static async generateIdInvoice(collection,prefix = 'INV') {
+        const year = new Date().getUTCFullYear()
+        const counter = await collection.findOneAndUpdate(
+            { _id: `${prefix}_${year}` },
+            { $inc: { seq: 1 } },
+            {
+                upsert: true,
+                returnDocument: 'after'
+            }
+        )
+
+        const number = String(counter.value.seq).padStart(6, '0')
+        return `INV-${year}-${number}`
+    }
+    static  maskEmail(email:string) {
+        const [local, domain] = email.split('@');
+        if (!domain) return '';
+
+        const maskedLocal = local.length <= 2
+            ? '*'.repeat(local.length)
+            : local[0] + '*'.repeat(local.length - 2) + local[local.length - 1];
+
+        const [name, tld] = domain.split('.');
+        const maskedDomain = '*'.repeat(name.length) + '.' + tld;
+
+        return maskedLocal + '@' + maskedDomain;
+    }
+    static async getBranchDocument(source,query:{domain:string}){
+        let branch     = await source.branches.findOne({domain:query.domain}) as IBranch | null;
+        if(!branch)
+            return null;
+
+        let processors = await source.processors.find({
+            _bid : branch?._id
+        }).toArray() as IProcessor[];
+
+
+        branch.processors = processors;
+        return branch
+    }
+}
+
 export default class Gateway extends Branches {
     private SECRET = Crypto.generateJWTSecret()
 
@@ -24,32 +68,6 @@ export default class Gateway extends Branches {
         }
     }
 
-    private maskEmail(email:string) {
-        const [local, domain] = email.split('@');
-        if (!domain) return '';
-
-        const maskedLocal = local.length <= 2
-            ? '*'.repeat(local.length)
-            : local[0] + '*'.repeat(local.length - 2) + local[local.length - 1];
-
-        const [name, tld] = domain.split('.');
-        const maskedDomain = '*'.repeat(name.length) + '.' + tld;
-
-        return maskedLocal + '@' + maskedDomain;
-    }
-    private async getBranchDocument(query:{domain:string}){
-        let branch     = await this.source.branches.findOne({domain:query.domain}) as IBranch | null;
-        if(!branch)
-            return null;
-
-        let processors = await this.source.processors.find({
-            _bid : branch?._id
-        }).toArray() as IProcessor[];
-
-
-        branch.processors = processors;
-        return branch
-    }
     @REST.get()
     async 'meta'(@REST.schema() branch : Pick<IBranch, "domain" >,ctx){
 
@@ -57,7 +75,7 @@ export default class Gateway extends Branches {
         let isDev = ctx.getNetwork().ips.local.find(x => host.split(':')[0]) !== undefined
 
         let document
-            = await this.getBranchDocument(branch);
+            = await Utils.getBranchDocument(this.source,branch);
 
         if(!document?.name)
             throw new Error("domain was not found");
@@ -146,7 +164,7 @@ export default class Gateway extends Branches {
                     expiry : card?.expiry
                 }:null,
                 profile    : profile?{
-                    email : this.maskEmail(profile.email),
+                    email : Utils.maskEmail(profile.email),
                 }:null,
             }
         }
@@ -305,8 +323,6 @@ export default class Gateway extends Branches {
     }
     @REST.get()
     async 'intent'(@REST.schema() intent:IGatewayIntent,ctx):Promise<{id:string,processors:{orderID:string,gateway:string,type:string,keys:{public:string}}[]}>{
-
-        console.log('intent:',intent)
         let currency:'USD' | 'CAD'
             = intent.currency as any || 'USD';
 
@@ -314,11 +330,11 @@ export default class Gateway extends Branches {
             = ctx.getHeaders().host.split('.').slice(-2).join('.')
 
         let branch
-               = await this.getBranchDocument({domain});
+               = await Utils.getBranchDocument(this.source,{domain});
 
         if(!branch)
             branch
-                = await this.getBranchDocument({domain:domain = intent.domain});
+                = await Utils.getBranchDocument(this.source,{domain:domain = intent.domain});
 
         let gateways = (await this.source.processors.find({
             _bid     : branch._id,

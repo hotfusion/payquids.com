@@ -1,12 +1,13 @@
 import {Authorization, REST} from "@hotfusion/ws"
 import {ObjectId} from "mongodb";
 import type {ICustomer, ICustomerProcessorProfile} from "../index.schema";
-import {DB} from "../index";
+
+import {Companies} from "../companies";
 interface ICTX {
     [key: string]: any
 }
 
-export class Customers extends  DB {
+export class Customers extends  Companies {
     @REST.post()
     @Authorization.protect()
     async ':_bid/customers/create'(@REST.schema() customer:Pick<ICustomer, 'email' | 'name' | 'address' | 'phone'>, ctx:ICTX){
