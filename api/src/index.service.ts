@@ -48,8 +48,9 @@ class Utils {
         return branch
     }
 }
+import {Model} from "./index";
 
-export default class Gateway extends Branches {
+export default class Gateway extends Model {
     private SECRET = Crypto.generateJWTSecret()
 
     @REST.html({
